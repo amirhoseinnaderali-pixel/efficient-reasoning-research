@@ -6,7 +6,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from ..benchmarks.loader import load_tasks
+from ..benchmarks.loader import benchmark_sha256, load_tasks
 from ..benchmarks.manifest import validate_manifest_path
 from .config import validate_config
 
@@ -85,6 +85,14 @@ def validate_materialized_benchmark(manifest: dict[str, Any], tasks_path: str | 
         raise ValueError(f"Materialized EXP-001 benchmark is missing: {path}")
     if not path.is_file():
         raise ValueError(f"Materialized EXP-001 benchmark is not a file: {path}")
+
+    actual_benchmark_sha256 = benchmark_sha256(path)
+    expected_benchmark_sha256 = manifest["integrity"].get("materialized_benchmark_sha256")
+    if actual_benchmark_sha256 != expected_benchmark_sha256:
+        raise ValueError(
+            "Materialized benchmark SHA-256 mismatch: "
+            f"expected {expected_benchmark_sha256}, got {actual_benchmark_sha256}"
+        )
 
     tasks = load_tasks(path)
     expected_count = int(manifest["task_count"])
