@@ -27,6 +27,8 @@ jobs:
           print("OFFICIAL_TASK_72_ENTRY:", row["entry_point"])
           print("OFFICIAL_TASK_72_TEST_SHA:", sha256_text(row["test"]))
           PY
+      - name: Install validation dependencies
+        run: python -m pip install PyYAML pytest
       - name: Materialize frozen benchmark
         run: PYTHONPATH=src python scripts/materialize_exp001_benchmark.py --manifest benchmarks/manifests/exp001_v1.json --output benchmarks/programming/exp001_v1/tasks.jsonl
       - name: Verify frozen benchmark
