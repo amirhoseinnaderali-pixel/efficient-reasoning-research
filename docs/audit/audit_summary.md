@@ -95,3 +95,15 @@ A clean hosted audit of the current frozen implementation established the follow
 - **EXP-001 was not executed.**
 - No empirical strategy result, statistical comparison, or paper Results claim was generated.
 
+
+## Final defect-closure pass — 2026-10-02
+
+Additional implementation defects closed after the hosted pre-execution audit:
+
+- The frozen materialized benchmark bytes are now hash-locked in the manifest and checked at runtime before execution.
+- Result-schema validation now requires git SHA, configuration hash, benchmark hash consistency, model metadata, and execution-environment metadata.
+- Sandbox infrastructure failures are classified separately from candidate execution failures and fail closed rather than entering correctness analysis.
+- The real execution smoke path now uses the shared budget accounting and performs both visible and hidden evaluation before writing a schema-validated artifact.
+- The frozen HumanEval assertion parser no longer mis-handles `with` / `async with` blocks.
+
+EXP-001 remains **NOT EXECUTED**. The external runtime blocker remains the missing `OPENAI_API_KEY`; no empirical result exists.
