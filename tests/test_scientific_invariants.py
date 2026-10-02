@@ -105,3 +105,69 @@ def test_result_schema_rejects_malformed_rows():
     except ValueError:
         return
     raise AssertionError("malformed result must fail schema validation")
+
+def test_result_schema_requires_reproducibility_provenance():
+    row = {
+        "experiment_id": "EXP-001",
+        "run_id": "r1",
+        "timestamp": "2026-10-02T00:00:00Z",
+        "strategy": "c0_single",
+        "model": "m",
+        "model_pool": ["m"],
+        "selected_candidate_id": "c0-0",
+        "generation_config": {},
+        "config_path": "c",
+        "benchmark": {"name": "b", "version": "1", "sha256": "x"},
+        "seed": 42,
+        "task_id": "t1",
+        "budget": {
+            "model_calls": 1,
+            "failed_model_calls": 0,
+            "retries": 0,
+            "input_tokens": 1,
+            "output_tokens": 1,
+            "total_generated_tokens": 1,
+            "model_latency_seconds": 0.1,
+            "execution_latency_seconds": 0.1,
+            "graph_latency_seconds": 0.0,
+            "strategy_wall_clock_seconds": 0.2,
+            "cost_proxy": 0.0,
+            "cost_proxy_status": "available",
+            "execution_steps": 1,
+            "candidate_count": 1,
+            "budget_violated": False,
+            "violation_reason": None,
+        },
+        "metrics": {"hidden_pass_rate": 1.0},
+        "environment": {
+            "git_sha": "a" * 40,
+            "config_sha256": "b" * 64,
+            "benchmark_sha256": "x",
+            "python": "3.12",
+            "platform": "test",
+            "model_config": {"m": {"model_id": "m"}},
+            "execution": {"backend": "docker"},
+        },
+        "status": "completed",
+        "error": None,
+        "evaluation": {
+            "hidden_passed": 1,
+            "hidden_total": 1,
+            "hidden_pass_rate": 1.0,
+            "executable": True,
+            "error": None,
+            "error_kind": None,
+            "latency_seconds": 0.1,
+            "execution_steps": 1,
+        },
+        "candidates": [],
+        "trace": [],
+        "notes": {},
+    }
+    validate_result(row)
+    row["environment"].pop("git_sha")
+    try:
+        validate_result(row)
+    except ValueError:
+        return
+    raise AssertionError("result provenance must require git_sha")
