@@ -171,3 +171,32 @@ def test_result_schema_requires_reproducibility_provenance():
     except ValueError:
         return
     raise AssertionError("result provenance must require git_sha")
+
+def test_infrastructure_execution_errors_fail_closed():
+    from efficient_reasoning.core import TaskEvaluation
+    from efficient_reasoning.evaluation.evaluator import InfrastructureExecutionError
+    from efficient_reasoning.verification.sandbox import ExecutionResult
+
+    class InfraExecutor:
+        def run(self, *args, **kwargs):
+            return ExecutionResult(0, 1, "daemon unavailable", 0.01, 1, "infrastructure")
+
+    evaluator = VisibleEvaluator(InfraExecutor(), Budget(1, 100, 10, 1, 1))
+    try:
+        evaluator.evaluate_visible("code", TASK)
+    except InfrastructureExecutionError as exc:
+        assert "daemon unavailable" in str(exc)
+    else:
+        raise AssertionError("sandbox infrastructure failures must fail closed")
+
+    candidate_failure = ExecutionResult(0, 1, "candidate crashed", 0.01, 1, "candidate_execution")
+
+    class CandidateExecutor:
+        def run(self, *args, **kwargs):
+            return candidate_failure
+
+    objective = ObjectiveEvaluator(CandidateExecutor(), Budget(1, 100, 10, 1, 1))
+    result = objective.evaluate_final("code", TASK)
+    assert isinstance(result, TaskEvaluation)
+    assert result.error_kind == "candidate_execution"
+    assert result.hidden_pass_rate == 0.0
