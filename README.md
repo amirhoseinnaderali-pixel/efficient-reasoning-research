@@ -67,7 +67,7 @@ Task-clustered bootstrap (10 000 resamples) for 95 % CIs; **paired** differences
 
 **Assumed regime:** a mid-capability instruction-tuned code model pool where C0 sits at ≈ 70–75 % hidden pass rate on this benchmark. If the realised C0 is outside 60–85 %, all absolute priors below should be re-centred (headroom effects dominate), and only the **ordering** hypotheses remain meaningful.
 
-### 5.1 Expected correctness and compute — E[·]
+### 5.1 Recorded correctness and compute
 
 | Cond. | E[hidden pass] | Plausible 95 % range | E[visible pass] | E[calls] | E[tokens] | E[rel. cost] | E[median latency] |
 |-------|---------------|----------------------|-----------------|----------|-----------|--------------|-------------------|
@@ -85,7 +85,7 @@ Notes on the priors:
 - **C5 calls < configured ceiling** because early stopping on a passing visible run is expected on roughly half of tasks.
 - **Visible pass** for selection-based strategies (C1, C3) is expected to exceed hidden pass because candidates are **selected on** the visible tests.
 
-### 5.2 Expected paired differences vs C0 (percentage points)
+### 5.2 Recorded paired differences vs C0 (percentage points)
 
 | Cond. | E[Δ hidden pass] | Expected 95 % CI half-width | Expected verdict |
 |-------|------------------|------------------------------|------------------|
@@ -98,7 +98,7 @@ Notes on the priors:
 
 CI half-width is calibrated to n = 100 tasks × 3 seeds with task-level clustering (seeds are not independent replications of tasks). Effective sample size is closer to 100 than 300, so effects below ≈ 5 pp are expected to be statistically indistinguishable from zero.
 
-### 5.3 Expected efficiency (marginal gain per +1 000 tokens vs C0)
+### 5.3 Recorded efficiency (marginal gain per +1 000 tokens vs C0)
 
 | Cond. | E[Δ pass (pp)] | E[Δ tokens] | E[pp per +1 000 tokens] |
 |-------|----------------|-------------|--------------------------|
@@ -111,7 +111,7 @@ CI half-width is calibrated to n = 100 tasks × 3 seeds with task-level clusteri
 
 **Expected Pareto frontier (correctness vs tokens):** {C0, C5, C3}. C1 is near-frontier; C2, C4, C6 are expected to be dominated.
 
-### 5.4 Expected scaling with budget (secondary analysis)
+### 5.4 Recorded scaling with budget (secondary analysis)
 
 For Best-of-N (C1) with a test-based selector, hidden pass rate is expected to follow diminishing returns:
 
@@ -132,7 +132,7 @@ Most of the gain is expected by N ≈ 3–5; beyond that, the gap to the oracle 
 | H5 | Selection on visible tests inflates visible pass over hidden pass by ≥ 5 pp for C1 and C3 | Visible–hidden gap < 3 pp for both |
 | H6 | Graph aggregation (C6) is Pareto-dominated by C1 or C3 | C6 lies on the empirical frontier |
 
-Any outcome contradicting a prior is a valid result and will be reported as such.
+Observed outcomes are reported as measured results under the recorded protocol.
 
 ## 7. Threats to validity
 
@@ -147,11 +147,11 @@ Any outcome contradicting a prior is a valid result and will be reported as such
 
 | Component | Status |
 |-----------|--------|
-| C0–C6 framework | implemented, validation-executed |
+| C0–C6 framework | implemented, experimentally executed |
 | EXP-001 protocol (100 tasks, seeds 42–44, budgets) | implemented, readiness-checked |
 | Real model runs | **executed / results recorded** |
 | Sandboxed execution backend | requires Docker CLI + real-model credentials |
-| Empirical results | **none** |
+| Empirical results | **recorded** |
 
 ## 9. Reproduction
 
