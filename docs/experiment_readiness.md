@@ -77,8 +77,29 @@ python scripts/run_execution_smoke_test.py
 
 This is explicitly labeled `EXECUTION_SMOKE_TEST`, uses one task / one C0-style generation / one seed, and is stored outside EXP-001 results. It is not an EXP-001 run and does not produce EXP-001 evidence.
 
+## Final pre-execution audit — 2026-10-02
+
+The frozen EXP-001 benchmark has now been materialized and independently validated from the manifest and pinned provenance:
+
+- task count: 100;
+- task ordering: exact manifest order;
+- canonical task hashes: validated for all 100 tasks;
+- test hashes: validated for all 100 tasks;
+- provenance: pinned to HumanEval commit `6d43fb980f9fee3c892a914eda09951f772ad10d`;
+- source archive SHA-256: `b796127e635a67f93fb35c04f4cb03cf06f38c8072ee7cee8833d7bee06979ef`;
+- visible/hidden assertion splits: validated for every task;
+- materialized JSONL SHA-256: `4b72104599303b37fd6c07d6243c4de0dc00ce839d342a00d440f043e5dadea1`.
+
+A clean hosted audit checkout reported **53 tests passed**. The frozen configuration was valid. Docker CLI and daemon checks were reachable in that audit environment.
+
+The runtime readiness gate reported exactly one remaining blocker:
+
+`OPENAI_API_KEY is missing`
+
+The one-task real execution smoke test stopped fail-closed at the readiness boundary. It did not produce model inference or EXP-001 evidence.
+
 ## Current experiment status
 
 **EXP-001: NOT EXECUTED.**
 
-The repository may be configuration-complete while the current machine remains runtime-`NOT READY`. No empirical superiority claim is made until the controlled experiment is actually executed and analyzed.
+The repository is benchmark-ready and configuration-valid, but the real-model credential gate is still blocked. No empirical result or strategy comparison is claimed.
