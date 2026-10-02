@@ -33,7 +33,7 @@ def canonical_task_hash(task: dict[str, Any]) -> str:
         "entry_point": task["entry_point"],
     }
     # Preserve the historical manifest hash contract: insertion order is task_id, prompt, entry_point.
-    return sha256_text(json.dumps(payload, separators=(",", ":")))
+    return sha256_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")))
 
 
 def test_source_hash(test_source: str) -> str:
