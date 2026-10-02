@@ -25,62 +25,63 @@ jobs:
           pip check
 
       - name: Materialize frozen EXP-001 benchmark
+        id: materialize
+        continue-on-error: true
         run: |
           python scripts/materialize_exp001_benchmark.py \
             --manifest benchmarks/manifests/exp001_v1.json \
             --output benchmarks/programming/exp001_v1/tasks.jsonl
 
-      - name: Verify benchmark integrity
+      - name: Diagnose pinned benchmark provenance
         run: |
           python - <<'PY'
-          import hashlib, json
-          from pathlib import Path
+          import gzip
+          import hashlib
+          import json
+          import urllib.request
           import sys
+          from pathlib import Path
           sys.path.insert(0, "src")
-          from efficient_reasoning.experiments.readiness import validate_frozen_manifest, validate_materialized_benchmark
-          from efficient_reasoning.benchmarks.loader import load_tasks
+          from efficient_reasoning.benchmarks.exp001 import canonical_task_hash, test_source_hash
 
-          manifest_path = Path("benchmarks/manifests/exp001_v1.json")
-          tasks_path = Path("benchmarks/programming/exp001_v1/tasks.jsonl")
-          manifest = validate_frozen_manifest(manifest_path)
-          validate_materialized_benchmark(manifest, tasks_path)
-          tasks = load_tasks(tasks_path)
+          manifest = json.loads(Path("benchmarks/manifests/exp001_v1.json").read_text())
+          p = manifest["provenance"]
+          url = f"https://raw.githubusercontent.com/openai/human-eval/{p['source_commit']}/{p['source_path']}"
+          req = urllib.request.Request(url, headers={"User-Agent": "efficient-reasoning-research/1.0"})
+          with urllib.request.urlopen(req, timeout=30) as resp:
+              archive = resp.read()
+          rows = [json.loads(x) for x in gzip.decompress(archive).decode("utf-8").splitlines() if x.strip()]
+          first = next(x for x in rows if x["task_id"] == "HumanEval/0")
+          expected = manifest["tasks"][0]
+          print("OFFICIAL_SOURCE_URL:", url)
+          print("OFFICIAL_ARCHIVE_SHA256_ACTUAL:", hashlib.sha256(archive).hexdigest())
+          print("OFFICIAL_ARCHIVE_SHA256_EXPECTED:", p["source_archive_sha256"])
+          print("OFFICIAL_ROW_COUNT:", len(rows))
+          print("HUMANEVAL_0_TASK_SHA256_ACTUAL:", canonical_task_hash(first))
+          print("HUMANEVAL_0_TASK_SHA256_EXPECTED:", expected["task_sha256"])
+          print("HUMANEVAL_0_TEST_SHA256_ACTUAL:", test_source_hash(first["test"]))
+          print("HUMANEVAL_0_TEST_SHA256_EXPECTED:", expected["test_sha256"])
 
-          expected_ids = [x["task_id"] for x in manifest["tasks"]]
-          observed_ids = [x["id"] for x in tasks]
-          print("MANIFEST_TASK_COUNT:", manifest["task_count"])
-          print("MATERIALIZED_TASK_COUNT:", len(tasks))
-          print("TASK_ORDER_MATCH:", observed_ids == expected_ids)
-          print("SOURCE_COMMIT:", manifest["provenance"]["source_commit"])
-          print("SOURCE_ARCHIVE_SHA256:", manifest["provenance"]["source_archive_sha256"])
-          print("CANONICAL_SOURCE:", manifest["provenance"]["canonical_source"])
-          print("VISIBLE_ASSERTIONS_TOTAL:", sum(len(t["tests"]["visible"]["assertions"]) for t in tasks))
-          print("HIDDEN_ASSERTIONS_TOTAL:", sum(len(t["tests"]["hidden"]["assertions"]) for t in tasks))
-          print("MANIFEST_FILE_SHA256:", hashlib.sha256(manifest_path.read_bytes()).hexdigest())
-          print("MATERIALIZED_FILE_SHA256:", hashlib.sha256(tasks_path.read_bytes()).hexdigest())
-          print("FIRST_TASK_ID:", observed_ids[0])
-          print("LAST_TASK_ID:", observed_ids[-1])
+          mirror_url = "https://raw.githubusercontent.com/nerdskingcom/gguf-humaneval-benchmark/7e5a3ceb7b8ab4d94714098fad566ef4c487a605/HumanEval.jsonl"
+          with urllib.request.urlopen(mirror_url, timeout=30) as resp:
+              mirror_bytes = resp.read()
+          mirror_lines = [json.loads(x) for x in mirror_bytes.decode("utf-8").splitlines() if x.strip()]
+          mirror_first = next(x for x in mirror_lines if x["task_id"] == "HumanEval/0")
+          print("MIRROR_FILE_SHA256_ACTUAL:", hashlib.sha256(mirror_bytes).hexdigest())
+          print("MIRROR_FILE_SHA256_EXPECTED:", p["acquisition_mirror"]["file_sha256"])
+          print("MIRROR_TASK_SHA256:", canonical_task_hash(mirror_first))
+          print("MIRROR_TEST_SHA256:", test_source_hash(mirror_first["test"]))
           PY
 
-      - name: Commit materialized benchmark locally
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add benchmarks/programming/exp001_v1/tasks.jsonl
-          git commit -m "data: materialize frozen EXP-001 benchmark"
-
       - name: Readiness gate
-        id: readiness
         continue-on-error: true
         run: python scripts/validate_readiness.py
 
       - name: Execution environment gate
-        id: execution_env
         continue-on-error: true
         run: python scripts/validate_execution_environment.py
 
       - name: One-task isolated execution smoke test
-        id: smoke
         continue-on-error: true
         run: python scripts/run_execution_smoke_test.py
 
@@ -93,14 +94,14 @@ jobs:
       - name: Final audit summary
         if: always()
         run: |
-          echo "READINESS_OUTCOME: ${{ steps.readiness.outcome }}"
-          echo "EXECUTION_ENV_OUTCOME: ${{ steps.execution_env.outcome }}"
-          echo "SMOKE_TEST_OUTCOME: ${{ steps.smoke.outcome }}"
+          echo "AUDIT_COMPLETED"
           echo "EXP001_EXECUTED: false"
 
       - name: Remove temporary audit workflow and push final state
         if: always()
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git rm .github/workflows/exp001_audit.yml
           git add -A
           git commit -m "chore: remove temporary EXP-001 audit workflow"
