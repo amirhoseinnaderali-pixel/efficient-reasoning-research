@@ -1,5 +1,11 @@
 # Efficient Reasoning in Language Models
 
+### Portfolio status
+
+**REGISTERED — HISTORICAL EMPIRICAL RESULT NOT RECOVERED**
+
+This project is retained as a research-instrument case study. The repository contains a validated C0–C6 experimental framework, but no real-model empirical result set was recoverable from the repository or visible Git history. Mock validation is not treated as empirical evidence.
+
 Research infrastructure for studying how inference-time computational budget should be allocated across reasoning strategies.
 
 ## Research Question
