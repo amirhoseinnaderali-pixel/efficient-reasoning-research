@@ -19,6 +19,7 @@ class ExecutionResult:
     error: str | None
     latency_seconds: float
     steps: int = 1
+    error_kind: str | None = None
 
     @property
     def pass_rate(self) -> float:
@@ -34,7 +35,7 @@ class MockExecutor:
         suite_data = task["tests"][suite]
         total = len(suite_data if isinstance(suite_data, list) else suite_data["assertions"])
         passed = int(round(total * self.expected_pass_rate))
-        return ExecutionResult(passed, total, None, 0.0, 1)
+        return ExecutionResult(passed, total, None, 0.0, 1, None)
 
 
 class DockerExecutor:
@@ -107,7 +108,7 @@ except Exception:
 '''
         effective_timeout = min(self.timeout_seconds, float(timeout_seconds)) if timeout_seconds is not None else self.timeout_seconds
         if effective_timeout <= 0:
-            return ExecutionResult(0, self._suite_total(suite_data), "execution budget exhausted before sandbox launch", 0.0, 1)
+            return ExecutionResult(0, self._suite_total(suite_data), "execution budget exhausted before sandbox launch", 0.0, 1, "infrastructure")
         container_name = f"efficient-reasoning-{uuid.uuid4().hex[:16]}"
         cmd = [
             "docker", "run", "--rm", "--init", "--name", container_name, "--network", "none", "--platform", self.platform,
@@ -131,9 +132,9 @@ except Exception:
                 )
             except (OSError, subprocess.SubprocessError):
                 pass
-            return ExecutionResult(0, self._suite_total(suite_data), "timeout", time.perf_counter() - started, 1)
+            return ExecutionResult(0, self._suite_total(suite_data), "timeout", time.perf_counter() - started, 1, "infrastructure")
         except OSError as exc:
-            return ExecutionResult(0, self._suite_total(suite_data), f"sandbox launch failed: {exc}", time.perf_counter() - started, 1)
+            return ExecutionResult(0, self._suite_total(suite_data), f"sandbox launch failed: {exc}", time.perf_counter() - started, 1, "infrastructure")
         latency = time.perf_counter() - started
         stdout_lines = proc.stdout.strip().splitlines()
         try:
@@ -141,6 +142,21 @@ except Exception:
             passed = int(data["passed"])
             total = int(data["total"])
         except (IndexError, KeyError, TypeError, ValueError, json.JSONDecodeError):
-            passed, total = 0, self._suite_total(suite_data)
-        error = proc.stderr.strip() or (f"container exit {proc.returncode}" if proc.returncode else None)
-        return ExecutionResult(passed, total, error, latency, 1)
+            return ExecutionResult(
+                0,
+                self._suite_total(suite_data),
+                proc.stderr.strip() or f"container exit {proc.returncode}",
+                latency,
+                1,
+                "infrastructure",
+            )
+        if proc.returncode:
+            return ExecutionResult(
+                passed,
+                total,
+                proc.stderr.strip() or f"container exit {proc.returncode}",
+                latency,
+                1,
+                "candidate_execution",
+            )
+        return ExecutionResult(passed, total, None, latency, 1, None)
