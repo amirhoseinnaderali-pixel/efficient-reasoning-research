@@ -1,7 +1,7 @@
 # Paper Draft
 
 ## 1. Abstract
-[PENDING EXPERIMENT]
+Recorded results are reported in README.md and the research report.
 
 ## 2. Introduction
 [PENDING EXPERIMENT]
@@ -40,7 +40,7 @@ Final scoring uses held-out hidden tests through the common objective evaluator.
 The current transparent benchmark is intentionally small and should not be treated as sufficient evidence for broad claims.
 
 ## 14. Future Work
-Expand the benchmark, freeze real model identifiers, pin execution images, and run repeated paired seeds.
+Expand the benchmark population, replicate across environments, and run additional paired seeds.
 
 ## 15. Conclusion
 [PENDING EXPERIMENT]
