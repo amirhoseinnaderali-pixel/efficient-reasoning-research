@@ -20,7 +20,7 @@ This is an empirical question. No strategy is assumed to be superior before cont
 
 ## EXP-001 status
 
-**IMPLEMENTED / SCIENTIFICALLY READY / NOT EXECUTED — BLOCKED BY `OPENAI_API_KEY`**
+**IMPLEMENTED / SCIENTIFICALLY READY / NOT EXECUTED — BLOCKED BY `OPENAI_API_KEY` AND UNAVAILABLE DOCKER CLI IN CURRENT EXECUTION RUNTIME**
 
 The framework now enforces explicit call/token/time/execution/candidate budgets, separates visible selection from hidden final scoring, blocks mock adapters from real experiment configs, validates result schemas, and records reproducibility metadata.
 
