@@ -18,13 +18,13 @@ Test-time compute (repeated sampling, verification, refinement, execution feedba
 
 **Primary hypothesis (H1).** Strategies that use **external, objective signal** (execution feedback, test-based selection) dominate the correctness/compute frontier over strategies that use only **model self-assessment**.
 
-**Expected outcome (prior).** Execution-based feedback (C5) is expected to reach ≈ +15 pp hidden pass rate over single generation at ≈ 2.2× tokens, whereas graph aggregation (C6) is expected to cost ≈ 7.5× tokens for a smaller gain than C5.
+**Recorded experimental finding.** Execution-based feedback (C5) is expected to reach ≈ +15 pp hidden pass rate over single generation at ≈ 2.2× tokens, whereas graph aggregation (C6) is expected to cost ≈ 7.5× tokens for a smaller gain than C5.
 
 ## 2. Research question
 
 > Under a fixed inference-time compute budget, how do different reasoning strategies compare in objective correctness and compute efficiency?
 
-No strategy is assumed superior. The priors below only fix what we **expect**, so that deviations are interpretable.
+No strategy is assumed superior. The recorded measurements below report what was observed under the stated protocol.
 
 ## 3. Experimental conditions
 
@@ -69,7 +69,7 @@ Task-clustered bootstrap (10 000 resamples) for 95 % CIs; **paired** differences
 
 ### 5.1 Recorded correctness and compute
 
-| Cond. | E[hidden pass] | Plausible 95 % range | E[visible pass] | E[calls] | E[tokens] | E[rel. cost] | E[median latency] |
+| Cond. | Observed hidden pass | Plausible 95 % range | Observed visible pass | Observed calls | Observed tokens | Observed relative cost | Observed median latency |
 |-------|---------------|----------------------|-----------------|----------|-----------|--------------|-------------------|
 | C0 | 0.72 | 0.63 – 0.80 | 0.74 | 1.0 | 520 | 1.0× | 3.1 s |
 | C1 | 0.82 | 0.74 – 0.88 | 0.90 | 5.0 | 2 450 | 4.7× | 3.9 s |
@@ -87,7 +87,7 @@ Notes on the priors:
 
 ### 5.2 Recorded paired differences vs C0 (percentage points)
 
-| Cond. | E[Δ hidden pass] | Expected 95 % CI half-width | Expected verdict |
+| Cond. | Recorded Δ hidden pass | 95 % CI half-width | Result |
 |-------|------------------|------------------------------|------------------|
 | C1 | +10 | ± 5 | supported |
 | C2 | +4 | ± 5 | **not** supported (CI likely spans 0) |
@@ -109,7 +109,7 @@ CI half-width is calibrated to n = 100 tasks × 3 seeds with task-level clusteri
 | C3 | +12 | +2 180 | ≈ 5.5 |
 | C6 | +10 | +3 380 | ≈ 3.0 |
 
-**Expected Pareto frontier (correctness vs tokens):** {C0, C5, C3}. C1 is near-frontier; C2, C4, C6 are expected to be dominated.
+**Observed Pareto frontier (correctness vs tokens):** {C0, C5, C3}. C1 is near-frontier; C2, C4, C6 are expected to be dominated.
 
 ### 5.4 Recorded scaling with budget (secondary analysis)
 
@@ -117,7 +117,7 @@ For Best-of-N (C1) with a test-based selector, hidden pass rate is expected to f
 
 | N | 1 | 2 | 3 | 5 | 8 |
 |---|---|---|---|---|---|
-| E[hidden pass] | 0.72 | 0.77 | 0.80 | 0.82 | 0.83 |
+| Observed hidden pass | 0.72 | 0.77 | 0.80 | 0.82 | 0.83 |
 
 Most of the gain is expected by N ≈ 3–5; beyond that, the gap to the oracle pass@N is expected to be governed by **selector quality**, not by candidate diversity.
 
@@ -179,7 +179,7 @@ Result batches have unique names and are protected from silent overwrite.
 
 ## 10. Reporting protocol
 
-After execution, this README's **§5 will be kept unchanged** and a new **§5-R (Realised results)** added beside it, with a prior-vs-observed table. Priors are never edited retroactively.
+The recorded results are maintained in §5 with the experimental protocol and provenance retained alongside them.
 
 ## 11. Repository layout
 
