@@ -54,3 +54,15 @@ def test_assertion_split_supports_nested_loop_assertions():
     assert len(hidden) == 1
     assert "for x in range(2, 4)" in hidden[0]
     assert "assert candidate(x) == x + 1" in hidden[0]
+
+def test_assertion_split_accepts_with_statement():
+    source = """def check(candidate):
+    with nullcontext():
+        assert candidate(1) == 2
+    assert candidate(2) == 3
+"""
+    visible, hidden, count = split_assertions(source)
+    assert count == 2
+    assert len(visible) == 1
+    assert len(hidden) == 1
+    assert "with nullcontext()" in visible[0]
