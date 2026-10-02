@@ -83,6 +83,8 @@ def _validate_check_structure(test_source: str) -> ast.FunctionDef:
                 continue
             if isinstance(node, (ast.Import, ast.ImportFrom)):
                 continue
+            if isinstance(node, (ast.Assign, ast.AnnAssign, ast.AugAssign)):
+                continue
             if isinstance(node, (ast.Pass, ast.Return)):
                 continue
             if isinstance(node, ast.Expr):
