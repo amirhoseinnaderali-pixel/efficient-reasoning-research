@@ -95,6 +95,13 @@ def validate_result(result: dict[str, Any]) -> None:
         raise ValueError(f"Unknown result status: {result['status']}")
     if not isinstance(result["candidates"], list) or not isinstance(result["trace"], list) or not isinstance(result["notes"], dict):
         raise ValueError("Result candidates/trace/notes have invalid types")
+    evaluation = result["evaluation"]
+    if evaluation is not None:
+        error_kind = evaluation.get("error_kind")
+        if error_kind not in {None, "candidate_execution", "infrastructure"}:
+            raise ValueError("Unknown evaluation error_kind")
+        if error_kind == "infrastructure":
+            raise ValueError("Infrastructure evaluation failures must be recorded with status=failed")
     if result["status"] in {"completed", "validation_only"}:
         if result["evaluation"] is None:
             raise ValueError("Completed result must contain final evaluation")
