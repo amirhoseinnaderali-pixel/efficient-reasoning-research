@@ -39,3 +39,16 @@ def test_exp001_local_imports_are_preserved_in_assertion_blocks():
     assert count == 2
     assert all("import random" in block for block in visible + hidden)
 
+def test_exp001_assignment_setup_is_preserved_in_assertion_blocks():
+    from efficient_reasoning.benchmarks.exp001 import split_assertions
+
+    source = """def check(candidate):
+    import random
+    for i in range(2):
+        x = random.randint(0, 1)
+        assert candidate(x) in (0, 1)
+        assert candidate(x) in (0, 1)
+"""
+    visible, hidden, count = split_assertions(source)
+    assert count == 2
+    assert all("x = random.randint(0, 1)" in block for block in visible + hidden)
