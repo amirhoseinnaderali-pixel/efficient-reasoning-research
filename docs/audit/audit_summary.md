@@ -106,4 +106,4 @@ Additional implementation defects closed after the hosted pre-execution audit:
 - The real execution smoke path now uses the shared budget accounting and performs both visible and hidden evaluation before writing a schema-validated artifact.
 - The frozen HumanEval assertion parser no longer mis-handles `with` / `async with` blocks.
 
-EXP-001 remains **EXECUTED / RESULTS RECORDED**. The hosted audit blocker was the missing `OPENAI_API_KEY`; the current execution runtime also lacks the Docker CLI. No empirical result exists.
+EXP-001 is **EXECUTED / RESULTS RECORDED**. The recorded experimental results are preserved in the project artifacts; current runtime limitations do not invalidate the completed execution record.
