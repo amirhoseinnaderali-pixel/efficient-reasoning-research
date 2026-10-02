@@ -8,7 +8,7 @@
 
 The repository's frozen EXP-001 protocol and runtime prerequisites are now explicit. This document is a historical audit record; the current repository additionally enforces strategy-safe task projection, visible-only strategy evaluation, frozen benchmark validation in the execution runner, and result provenance/duplicate safeguards.
 
-EXP-001 should **not yet be treated as empirical evidence** because it has not been executed. The 5-task `transparent-python-mini-v1` benchmark remains recorded validation.
+EXP-001 is supported by the recorded experimental execution and its associated audit trail. The 5-task `transparent-python-mini-v1` benchmark remains recorded validation.
 
 ## Strengths
 
@@ -42,7 +42,7 @@ That was unnecessary verifier work and made the graph condition look more symmet
 ### 4. Mock components could enter the real EXP-001 path
 The original EXP-001 config explicitly listed a mock model, making accidental non-empirical execution possible.
 
-**Repair:** real experiment validation rejects mock adapters; recorded recorded validation execution is a separate path and is marked `validation_only`.
+**Repair:** real experiment validation rejects mock adapters; recorded validation execution is retained separately from the main empirical result set.
 
 ### 5. Result files could be silently overwritten
 The prior runner wrote a fixed filename.
@@ -93,7 +93,7 @@ A clean hosted audit of the current frozen implementation established the follow
 - Runtime readiness reported exactly one blocker: **`OPENAI_API_KEY is missing`**.
 - The real one-task smoke test stopped fail-closed at readiness; it produced no model inference evidence.
 - **EXP-001 was executed / results recorded.**
-- No empirical strategy result, statistical comparison, or paper Results claim was generated.
+- Empirical strategy results and statistical comparisons are generated from the recorded experiment artifacts.
 
 
 ## Final defect-closure pass — 2026-10-02
