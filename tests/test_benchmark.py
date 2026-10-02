@@ -25,3 +25,17 @@ def test_exp001_split_preserves_assertion_bearing_loop_as_one_unit():
     assert count == 2
     assert len(visible) == 1
     assert len(hidden) == 1
+
+def test_exp001_local_imports_are_preserved_in_assertion_blocks():
+    from efficient_reasoning.benchmarks.exp001 import split_assertions
+
+    source = """def check(candidate):
+    import random
+    assert candidate(1) == 1
+    for x in range(2, 4):
+        assert candidate(x) == x
+"""
+    visible, hidden, count = split_assertions(source)
+    assert count == 2
+    assert all("import random" in block for block in visible + hidden)
+
