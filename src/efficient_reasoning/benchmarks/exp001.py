@@ -79,6 +79,20 @@ def _top_level_asserts(test_source: str) -> list[ast.Assert]:
     for node in check.body:
         if isinstance(node, ast.Assert):
             asserts.append(node)
+        elif isinstance(node, ast.For):
+            # Frozen EXP-001 includes assertion-bearing loops (e.g. HumanEval/44).
+            # Keep each supported loop as one deterministic test unit; do not expand
+            # or alter the frozen source test semantics.
+            body_ok = all(
+                isinstance(child, ast.Assert)
+                for child in node.body
+            )
+            if body_ok and node.body and not node.orelse:
+                asserts.append(node)
+            else:
+                raise ValueError(
+                    f"Unsupported executable setup in check(candidate): {ast.unparse(node)}"
+                )
         elif isinstance(node, ast.Expr) and isinstance(node.value, ast.Call):
             # Bare `print` in historical HumanEval checks is harmless and has no
             # bearing on correctness; it is excluded from both suites.
