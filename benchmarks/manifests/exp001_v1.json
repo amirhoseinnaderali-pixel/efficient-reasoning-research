@@ -867,6 +867,7 @@
   ],
   "integrity": {
     "hash_algorithm": "sha256",
+    "materialized_benchmark_sha256": "4b72104599303b37fd6c07d6243c4de0dc00ce839d342a00d440f043e5dadea1",
     "manifest_content_sha256": "b14dc4fbe6b8dd0a31764cc66cb9446473cf942f676a24205fbd9965c481a798"
   }
 }
