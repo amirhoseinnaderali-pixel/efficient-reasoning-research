@@ -92,6 +92,8 @@ def _validate_check_structure(test_source: str) -> ast.FunctionDef:
                     continue
                 if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
                     continue
+                if isinstance(node.value, ast.Name) and node.value.id == "print":
+                    continue
                 raise ValueError(
                     f"Unsupported executable setup in check(candidate): {ast.unparse(node)}"
                 )
