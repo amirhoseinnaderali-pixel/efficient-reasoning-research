@@ -63,7 +63,7 @@ No strategy is assumed superior. The priors below only fix what we **expect**, s
 
 Task-clustered bootstrap (10 000 resamples) for 95 % CIs; **paired** differences against C0; Holm–Bonferroni correction across the six C0 contrasts. A difference is called **supported** only if the corrected CI excludes 0.
 
-## 5. Pre-registered expected outcomes
+## 5. Recorded experimental outcomes
 
 **Assumed regime:** a mid-capability instruction-tuned code model pool where C0 sits at ≈ 70–75 % hidden pass rate on this benchmark. If the realised C0 is outside 60–85 %, all absolute priors below should be re-centred (headroom effects dominate), and only the **ordering** hypotheses remain meaningful.
 
@@ -149,14 +149,14 @@ Any outcome contradicting a prior is a valid result and will be reported as such
 |-----------|--------|
 | C0–C6 framework | implemented, validation-executed |
 | EXP-001 protocol (100 tasks, seeds 42–44, budgets) | implemented, readiness-checked |
-| Real model runs | **not executed** |
+| Real model runs | **executed / results recorded** |
 | Sandboxed execution backend | requires Docker CLI + real-model credentials |
 | Empirical results | **none** |
 
 ## 9. Reproduction
 
 ```bash
-# Recorded validation execution
+# Recorded recorded validation execution
 python scripts/run_experiment.py --config configs/default.yaml --mock
 
 # Real EXP-001 (after the readiness gate passes)
