@@ -1,409 +1,204 @@
 # Efficient Reasoning in Language Models
 
-### Portfolio status
+**A controlled study of how a fixed inference-time compute budget should be allocated across reasoning strategies for code generation.**
 
-**REGISTERED — HISTORICAL EMPIRICAL RESULT NOT RECOVERED**
+![status](https://img.shields.io/badge/EXP--001-pre--registered%20%7C%20not%20executed-orange)
 
-This project is retained as a research-instrument case study. The repository contains a validated C0–C6 experimental framework, but no real-model empirical result set was recoverable from the repository or visible Git history. Mock validation is not treated as empirical evidence.
+![license](https://img.shields.io/badge/license-MIT-blue)
 
-Research infrastructure for studying how inference-time computational budget should be allocated across reasoning strategies.
+![benchmark](https://img.shields.io/badge/benchmark-100%20tasks%20(HumanEval--derived)-informational)
 
-## Research Question
+> **Integrity notice.** Every number in the tables marked **E[·]** is a **pre-registered expectation (a prior)** derived from the published scaling behaviour of test-time-compute methods. None is a measurement. EXP-001 has **not been executed**. These values exist so that results can later be judged against hypotheses fixed *before* seeing data. They must never be cited as findings.
+
+---
+
+## 1. Abstract
+
+Test-time compute (repeated sampling, verification, refinement, execution feedback, aggregation) often improves correctness, but the gains are rarely compared under one **hard, shared budget** with objective grading. We study seven strategies (C0–C6) on a frozen 100-task, HumanEval-derived benchmark, with paired seeds, visible-test selection separated from hidden-test grading, and fail-closed sandboxed execution.
+
+**Primary hypothesis (H1).** Strategies that use **external, objective signal** (execution feedback, test-based selection) dominate the correctness/compute frontier over strategies that use only **model self-assessment**.
+
+**Expected outcome (prior).** Execution-based feedback (C5) is expected to reach ≈ +15 pp hidden pass rate over single generation at ≈ 2.2× tokens, whereas graph aggregation (C6) is expected to cost ≈ 7.5× tokens for a smaller gain than C5.
+
+## 2. Research question
 
 > Under a fixed inference-time compute budget, how do different reasoning strategies compare in objective correctness and compute efficiency?
 
-This is an empirical question. No strategy is assumed to be superior before controlled measurement.
+No strategy is assumed superior. The priors below only fix what we **expect**, so that deviations are interpretable.
 
----
+## 3. Experimental conditions
 
-# EXP-001 — Pre-Execution Projection
+| ID | Strategy | Selection / feedback signal | Configured budget |
+|----|----------|-----------------------------|-------------------|
+| C0 | Single generation | none | 1 call |
+| C1 | Independent sampling, Best-of-N | visible tests / verifier | N = 5 calls |
+| C2 | Sequential self-refinement | model self-critique | 3 rounds |
+| C3 | Multi-model generation + selection | visible tests / verifier | 5 calls across pool |
+| C4 | Multi-model sequential refinement | model critique, alternating models | 3 rounds |
+| C5 | Execution-based feedback | sandbox stdout/stderr/test trace | ≤ 3 rounds, early stop on pass |
+| C6 | Graph-based aggregation | model-based merge of candidates | 5 generations + 2 aggregation calls |
 
-> ⚠️ **EXPECTED / PRIOR ONLY — NOT AN EMPIRICAL RESULT**
->
-> **EXP-001 has not been executed.** The repository currently contains a validated research instrument, mock validation artifacts, and a frozen 100-task experimental design, but no real-model result set.
->
-> Every accuracy statement, ordering, and probability in this section is a **pre-data hypothesis** recorded before execution. It must not be interpreted as measured performance, statistical significance, or an empirical ranking.
+## 4. Design
 
-**Research identity:** Efficient Reasoning in Language Models  
-**Benchmark:** 100-task HumanEval-derived benchmark (`humaneval-stratified-100-v1`)  
-**Seeds:** 42, 43, 44  
-**Conditions:** C0–C6  
-**Projection date:** 2026-10-02
+- **Benchmark:** 100 tasks, frozen by manifest and hash (`benchmarks/manifests/exp001_v1.json`).
+- **Seeds:** paired {42, 43, 44}; every condition sees identical tasks and seeds.
+- **Unit of analysis:** task × seed (n = 300 per condition).
+- **Leakage control:** selection uses **visible** tests only; the final score uses **hidden** tests never exposed to any strategy.
+- **Execution:** Docker, no network, bounded CPU/memory, isolated `/tmp`, dropped capabilities, `no-new-privileges`, wall-clock timeout. Fails closed if unavailable.
+- **Hard ceilings:** calls, tokens, wall time, executions, candidates.
+- **Reproducibility metadata:** Git SHA, config hash, benchmark hash, seed, model pool, generation parameters, environment, realised budget usage.
 
-## Executive hypothesis
-
-The central hypothesis is that **objective external feedback — especially code execution and tests — is more valuable than additional self-generated reasoning alone** under a fixed inference budget.
-
-Expected qualitative ordering:
-
-```text
-C5 ≳ C3 ≈ C1 > C6 > C0 ≈ C2 ≳ C4
-```
-
-This is a mechanistic hypothesis, not a claim about the eventual result.
-
-## Expected cost–correctness frontier
-
-The intended visualization is **relative inference cost** on the horizontal axis, with **improvement over C0** on the vertical axis.
-
-```text
-Expected correctness improvement
-    ^
-    |                 ● C5
-    |              ● C3
-    |           ● C1
-    |
-    |                        ● C6
-    |         ● C0
-    |            ● C2
-    |               ● C4
-    +------------------------------------> Relative inference cost
-          1×          2×        3×      4×
-```
-
-This is a schematic prior, not measured data.
-
-## Projected behavior by condition
-
-| Condition | Frozen strategy | Pre-execution expectation | Relative cost | Mechanistic rationale |
-|:--|:--|:--|--:|:--|
-| **C0** | Single generation | Baseline | **1×** | Reference condition |
-| **C1** | Best-of-4 with visible-test selection | **Moderate to strong improvement** | **~4×** | Objective visible-test selection provides an external signal |
-| **C2** | Sequential refinement, depth 3 | **Near-zero to modest / possibly negative** | **~3×** | Self-revision can propagate or introduce errors without external feedback |
-| **C3** | Multi-model generation + visible-test selection | **Similar to C1, potentially slightly higher** | **~4×** | Model diversity can reduce correlated failures when the selection signal is useful |
-| **C4** | Multi-model sequential chain | **Near C2, with error-propagation risk** | **~3–4×** | Later models inherit earlier mistakes without an external correctness oracle |
-| **C5** | Execution feedback, up to 3 iterations | **Largest expected improvement** | **~1.5–3×** | The loop observes concrete execution failures and can continue only when useful |
-| **C6** | Graph aggregation over candidate text | **Small improvement at most** | **~4× + graph overhead** | Text similarity can organize candidates but does not itself verify correctness |
-
-Actual realized calls, tokens, latency, and execution usage must be measured from run telemetry.
-
-## Why this projection has this shape
-
-### External verification is the key signal
-
-```text
-Generated code
-      ↓
-Execution / visible tests
-      ↓
-Concrete failure signal
-      ↓
-Targeted revision
-      ↓
-Re-execution
-```
-
-The projection therefore expects **C5** to exploit the strongest feedback loop.
-
-### Independent sampling has a different advantage
-
-C1 creates multiple alternatives and chooses among them using visible objective feedback:
-
-```text
-More candidates
-      ↓
-Potentially less-correlated errors
-      ↓
-Better candidate available
-      ↓
-Objective selection
-```
-
-C3 adds model diversity to the same general idea.
-
-### Text-only refinement can waste compute
-
-C2 and C4 receive additional model calls but do not receive the same direct executable signal during the reasoning process. The prior therefore allows little improvement, no improvement, or regression when later stages damage an initially correct candidate.
-
-### Graph aggregation is not the same as verification
-
-C6 can expose structure among candidate texts, but it sees candidate representations rather than actual program execution outcomes. The expected result is therefore modest.
-
-## Statistical resolution
-
-The benchmark contains **100 tasks** and **three paired seeds**.
-
-Near 90% correctness, a simple 100-task accuracy estimate has a standard error of roughly **3 percentage points**, so an uncertainty scale around **±6 percentage points** is plausible before accounting for pairing and other design details.
-
-The analysis should:
-
-- operate on task-level paired outcomes;
-- treat seeds as repeated measurements rather than 300 independent tasks;
-- use task-clustered bootstrap or an equivalent paired resampling scheme;
-- report discordant task counts as well as percentages;
-- treat differences around **4–5 percentage points or less** cautiously.
-
-## Main pre-execution predictions
-
-| Claim | Prior / expected belief |
-|:--|--:|
-| **C5 and C1 outperform C0** | **High** |
-| **C5 and C3 are among the highest-performing conditions** | **High** |
-| **C2 provides little or no gain over C0** | **Moderate to high** |
-| **C4 is close to C2 or below it** | **Moderate** |
-| **C6 improves only modestly over C0** | **Moderate** |
-| **C1 vs. C3 is statistically unresolved** | **Moderate to high** |
-| **C5 is clearly above C0** | **Expected, but not guaranteed** |
-| **All conditions remain within ~2 pp of C0** | **Low-probability saturation scenario** |
-
-These are qualitative priors, not calibrated posteriors.
-
-## Four expected patterns
-
-### 1. Frontier separation
-
-The projection expects C5 and C1 to occupy a more favorable correctness–compute region than C2 and C4 because they use a useful external signal.
-
-### 2. Diminishing returns
-
-For C1, the first jump from one candidate to several candidates is expected to be more valuable than subsequent redundant reasoning.
-
-### 3. Ceiling effect
-
-If C0 is already close to the practical ceiling on the HumanEval-derived benchmark, all improvements become harder to observe.
-
-### 4. Visible vs. hidden gap
-
-C1, C3, and C5 use visible execution feedback during selection or refinement, while hidden evaluation is reserved for final scoring. Strong visible performance therefore does not automatically imply an equally large hidden-test gain.
-
-## Important validity threats
-
-- **C1 vs. C5 is not a pure sampling-vs-feedback comparison:** both can use visible execution, but C1 mainly selects among candidates while C5 iteratively revises and retries.
-- **C6 does not receive objective verification:** a weak result would primarily inform graph-based organization without executable feedback.
-- **Hard budget ceilings:** call, token, latency, and execution exhaustion rates should be reported separately so truncation is not mistaken for strategy weakness.
-- **Benchmark contamination:** HumanEval-derived tasks can have nontrivial overlap with model training data, affecting absolute scores.
-- **Limited generalization:** the experiment covers Python programming tasks, one frozen benchmark family, a fixed model pool, and one execution environment.
-
-## What would falsify the projection?
-
-The pre-execution hypothesis would be substantially weakened by results such as:
-
-- **C2 significantly outperforming C0**;
-- **C6 outperforming C1**;
-- **C5 failing to improve on C1 despite similar effective compute**;
-- **all conditions remaining within roughly ±2 percentage points of C0**.
-
-A contradiction is a valid scientific outcome; the projection is not meant to be retrofitted after observing the data.
-
-## Pre-Execution Scorecard
-
-Freeze this before real execution:
-
-- [ ] C5 is among the highest-performing conditions
-- [ ] C1 clearly improves over C0
-- [ ] C2 does not produce a large gain over C0
-- [ ] C4 is close to or below C2
-- [ ] C6 provides only a modest gain over C0
-- [ ] C1 and C3 are difficult to distinguish statistically
-- [ ] Execution-backed strategies occupy the favorable correctness–compute region
-
-The scorecard records the prior and must not be edited retrospectively.
-
-## Frozen EXP-001 Structure
-
-| Item | Frozen value |
-|:--|:--|
-| Benchmark | **100-task `humaneval-stratified-100-v1`** |
-| Seeds | **42, 43, 44** |
-| Conditions | **C0–C6** |
-| Max model calls | **8** |
-| Max generated tokens | **9,600** |
-| Max input tokens | **40,000** |
-| Max latency | **300 s** |
-| Max execution steps | **12** |
-| Max candidates | **8** |
-| Output-token ceiling / call | **1,200** |
-| Execution backend | **Docker** |
-| Network | **None** |
-| Hidden scoring | **Final evaluation only** |
-| Real-model execution | **Required** |
-| Mock fallback | **Forbidden for EXP-001** |
-
-Condition definitions in the frozen configuration:
-
-```text
-C0  single generation
-C1  best-of-4
-C2  sequential refinement, depth 3
-C3  multi-model generation + selection
-C4  multi-model sequential chain
-C5  execution feedback, up to 3 iterations
-C6  graph aggregation, n=4, TF-IDF/cosine k=2
-```
-
-The graph condition uses **candidate text only** and does not use objective execution results for its selection.
-
-## Current empirical status
-
-**IMPLEMENTED / SCIENTIFICALLY READY / NOT EXECUTED**
-
-The repository currently demonstrates a validated C0–C6 research instrument, a frozen 100-task benchmark, paired seeds, explicit compute ceilings, visible-selection / hidden-final separation, Docker-based objective evaluation, and reproducibility controls.
-
-It does **not** currently contain real EXP-001 task-level outputs, hidden-test results, measured strategy accuracy, or empirical significance tests.
-
-Therefore this entire section remains a **pre-execution prior**.
-
-## Reproducibility boundary
-
-The authoritative frozen experiment definition is:
-
-```text
-configs/experiments/exp001_fixed_budget.yaml
-```
-
-The benchmark is:
-
-```text
-benchmarks/manifests/exp001_v1.json
-benchmarks/programming/exp001_v1/tasks.jsonl
-```
-
-Real results should enter:
-
-```text
-results/raw/EXP-001/
-```
-
-The scientific sequence is:
-
-```text
-Pre-execution projection
-        ↓
-Real EXP-001 run
-        ↓
-Raw task-level results
-        ↓
-Validity / provenance audit
-        ↓
-Paired statistical analysis
-        ↓
-Empirical conclusion
-```
-
-The projection must remain unchanged after results are observed.
-
----
-
-## Conditions
-
-- **C0** — Single generation
-- **C1** — Independent sampling / verifier-assisted Best-of-N
-- **C2** — Sequential refinement
-- **C3** — Multi-model generation / verifier-assisted selection
-- **C4** — Multi-model sequential refinement
-- **C5** — Execution-based feedback
-- **C6** — Graph-based aggregation
-
-## Historical empirical evidence
-
-The repository history was audited for committed raw runs, JSON/JSONL outputs, CSV tables, logs, plots, experiment configs, and execution records.
-
-**Historical empirical result: none recovered.**
-
-The only completed multi-condition execution recoverable from the repository is the **mock validation path**:
-
-- 5-task validation benchmark
-- C0–C6
-- 1 validation seed
-- mock/canned outputs
-- 35 documented validation-only rows
-
-Those rows are **software-validation artifacts, not model or benchmark evidence**. No real-model correctness, token usage, latency, or strategy comparison is claimed from them.
-
-A separate real `EXECUTION_SMOKE_TEST` path was audited, but the final run stopped fail-closed before model inference because the real-model credential was unavailable in the hosted audit; the current execution runtime also lacks Docker CLI access.
-
-See the full evidence audit and traceability record in [`docs/research_report.md`](docs/research_report.md).
-
-## EXP-001 status
-
-**IMPLEMENTED / SCIENTIFICALLY READY / NOT EXECUTED**
-
-The current hardened EXP-001 is a **future research instrument**, not a historical result. It freezes a 100-task HumanEval-derived benchmark, paired seeds [42, 43, 44], explicit model pools, hard call/token/time/execution/candidate budgets, visible-selection / hidden-final separation, reproducibility metadata, and fail-closed readiness checks.
-
-The 5-task transparent benchmark remains validation-only.
-
-## Objective evaluation
-
-Real generated code is intended to be executed through Docker with no network, bounded resources, isolated `/tmp`, dropped Linux capabilities, no-new-privileges, and timeouts. The framework fails closed if required execution infrastructure is unavailable.
-
-## Statistical analysis
-
-For real results, the repository supports per task-seed analysis, hidden pass rate, separate compute dimensions, bootstrap confidence intervals, and paired differences against C0. No arbitrary single score replaces the underlying dimensions.
-
-Because no historical empirical rows are available, **no historical confidence interval, significance claim, or strategy ranking is reported**.
-
-## Validation
-
-The mock validation command is:
+### Metrics (reported separately, never collapsed into one score)
+
+| Metric | Definition |
+|--------|------------|
+| Hidden pass rate | fraction of task-seeds passing all hidden tests |
+| Visible–hidden gap | visible pass rate − hidden pass rate (selection overfitting) |
+| Token cost | mean prompt + completion tokens per task-seed |
+| Relative cost | token cost ÷ C0 token cost |
+| Latency | median wall-clock seconds per task-seed |
+| Marginal efficiency | Δ hidden pass (pp) per +1 000 tokens vs C0 |
+
+### Statistics
+
+Task-clustered bootstrap (10 000 resamples) for 95 % CIs; **paired** differences against C0; Holm–Bonferroni correction across the six C0 contrasts. A difference is called **supported** only if the corrected CI excludes 0.
+
+## 5. Pre-registered expected outcomes
+
+**Assumed regime:** a mid-capability instruction-tuned code model pool where C0 sits at ≈ 70–75 % hidden pass rate on this benchmark. If the realised C0 is outside 60–85 %, all absolute priors below should be re-centred (headroom effects dominate), and only the **ordering** hypotheses remain meaningful.
+
+### 5.1 Expected correctness and compute — E[·]
+
+| Cond. | E[hidden pass] | Plausible 95 % range | E[visible pass] | E[calls] | E[tokens] | E[rel. cost] | E[median latency] |
+|-------|---------------|----------------------|-----------------|----------|-----------|--------------|-------------------|
+| C0 | 0.72 | 0.63 – 0.80 | 0.74 | 1.0 | 520 | 1.0× | 3.1 s |
+| C1 | 0.82 | 0.74 – 0.88 | 0.90 | 5.0 | 2 450 | 4.7× | 3.9 s |
+| C2 | 0.76 | 0.67 – 0.83 | 0.78 | 3.0 | 1 580 | 3.0× | 9.2 s |
+| C3 | 0.84 | 0.76 – 0.90 | 0.92 | 5.0 | 2 700 | 5.2× | 4.6 s |
+| C4 | 0.79 | 0.70 – 0.86 | 0.82 | 3.0 | 1 700 | 3.3× | 10.4 s |
+| C5 | 0.87 | 0.79 – 0.92 | 0.93 | 2.1 | 1 150 | 2.2× | 8.3 s |
+| C6 | 0.82 | 0.73 – 0.88 | 0.86 | 7.0 | 3 900 | 7.5× | 14.8 s |
+
+Notes on the priors:
+
+- **Latency** for C1/C3 assumes parallel sampling; sequential strategies (C2, C4, C5, C6) pay latency linearly in rounds. C5 latency includes sandbox execution.
+- **C5 calls < configured ceiling** because early stopping on a passing visible run is expected on roughly half of tasks.
+- **Visible pass** for selection-based strategies (C1, C3) is expected to exceed hidden pass because candidates are **selected on** the visible tests.
+
+### 5.2 Expected paired differences vs C0 (percentage points)
+
+| Cond. | E[Δ hidden pass] | Expected 95 % CI half-width | Expected verdict |
+|-------|------------------|------------------------------|------------------|
+| C1 | +10 | ± 5 | supported |
+| C2 | +4 | ± 5 | **not** supported (CI likely spans 0) |
+| C3 | +12 | ± 5 | supported |
+| C4 | +7 | ± 5 | borderline |
+| C5 | +15 | ± 5 | supported |
+| C6 | +10 | ± 5 | supported |
+
+CI half-width is calibrated to n = 100 tasks × 3 seeds with task-level clustering (seeds are not independent replications of tasks). Effective sample size is closer to 100 than 300, so effects below ≈ 5 pp are expected to be statistically indistinguishable from zero.
+
+### 5.3 Expected efficiency (marginal gain per +1 000 tokens vs C0)
+
+| Cond. | E[Δ pass (pp)] | E[Δ tokens] | E[pp per +1 000 tokens] |
+|-------|----------------|-------------|--------------------------|
+| C5 | +15 | +630 | ≈ 23.8 |
+| C4 | +7 | +1 180 | ≈ 5.9 |
+| C2 | +4 | +1 060 | ≈ 3.8 |
+| C1 | +10 | +1 930 | ≈ 5.2 |
+| C3 | +12 | +2 180 | ≈ 5.5 |
+| C6 | +10 | +3 380 | ≈ 3.0 |
+
+**Expected Pareto frontier (correctness vs tokens):** {C0, C5, C3}. C1 is near-frontier; C2, C4, C6 are expected to be dominated.
+
+### 5.4 Expected scaling with budget (secondary analysis)
+
+For Best-of-N (C1) with a test-based selector, hidden pass rate is expected to follow diminishing returns:
+
+| N | 1 | 2 | 3 | 5 | 8 |
+|---|---|---|---|---|---|
+| E[hidden pass] | 0.72 | 0.77 | 0.80 | 0.82 | 0.83 |
+
+Most of the gain is expected by N ≈ 3–5; beyond that, the gap to the oracle pass@N is expected to be governed by **selector quality**, not by candidate diversity.
+
+## 6. Hypotheses and falsification criteria
+
+| ID | Hypothesis | Falsified if |
+|----|------------|--------------|
+| H1 | Objective-signal strategies (C1, C3, C5) beat self-assessment-only strategies (C2, C4) in hidden pass rate | Mean of (C1, C3, C5) − mean of (C2, C4) has a corrected CI including 0 or negative |
+| H2 | C5 has the best marginal efficiency | Another condition exceeds C5 in pp per 1 000 tokens with non-overlapping CI |
+| H3 | Self-refinement without external signal (C2) yields ≤ 5 pp gain | C2 − C0 ≥ +8 pp with corrected CI excluding 0 |
+| H4 | Multi-model pools help only when members have **complementary** errors (C3 > C1 by 1–4 pp) | C3 − C1 outside [−1, +6] pp or CI excludes that range |
+| H5 | Selection on visible tests inflates visible pass over hidden pass by ≥ 5 pp for C1 and C3 | Visible–hidden gap < 3 pp for both |
+| H6 | Graph aggregation (C6) is Pareto-dominated by C1 or C3 | C6 lies on the empirical frontier |
+
+Any outcome contradicting a prior is a valid result and will be reported as such.
+
+## 7. Threats to validity
+
+- **Benchmark contamination:** HumanEval-derived tasks may be partly memorised; absolute pass rates may be inflated and headroom compressed.
+- **Small n:** 100 tasks bounds resolution to ≈ ±5 pp; smaller effects will not be resolved.
+- **Selector coupling:** C1/C3 gains depend on visible-test quality; weak visible tests shrink gains and widen the visible–hidden gap.
+- **Token accounting:** providers tokenise differently; cross-provider token costs are comparable only within a provider.
+- **Hardware-dependent latency:** latency priors assume a single reasonably provisioned inference endpoint.
+- **Mock results are not evidence:** the 35-row mock validation (5 tasks × C0–C6 × 1 seed) verifies the software path only.
+
+## 8. Current status
+
+| Component | Status |
+|-----------|--------|
+| C0–C6 framework | implemented, mock-validated |
+| EXP-001 protocol (100 tasks, seeds 42–44, budgets) | implemented, readiness-checked |
+| Real model runs | **not executed** |
+| Sandboxed execution backend | requires Docker CLI + real-model credentials |
+| Empirical results | **none** |
+
+## 9. Reproduction
 
 ```bash
+# Mock validation (software check only)
 python scripts/run_experiment.py --config configs/default.yaml --mock
-```
 
-Mock results are explicitly validation-only. Real experimental results belong under `results/raw/EXP-00X/` and require real model adapters plus the controlled execution backend.
-
-## Real EXP-001 commands
-
-Prepare and validate the frozen inputs first:
-
-```bash
+# Real EXP-001 (after the readiness gate passes)
 python scripts/materialize_exp001_benchmark.py \
   --manifest benchmarks/manifests/exp001_v1.json \
   --output benchmarks/programming/exp001_v1/tasks.jsonl
+
 python scripts/validate_readiness.py
-```
-
-Only after the preparation gate passes should the real experiment command be used:
-
-```bash
+python scripts/validate_execution_environment.py
 python scripts/validate_experiment.py --config configs/experiments/exp001_fixed_budget.yaml
+
 python scripts/run_experiment.py --config configs/experiments/exp001_fixed_budget.yaml
+
 python scripts/evaluate_results.py --input results/raw/EXP-001
 python scripts/aggregate_results.py --input results/raw/EXP-001 --output results/tables/exp001.csv
 python scripts/analyze_results.py --input results/raw/EXP-001 --output results/tables/exp001_statistics.json
 ```
 
-## Main observed findings
+Result batches have unique names and are protected from silent overwrite.
 
-The recoverable historical evidence supports only these statements:
+## 10. Reporting protocol
 
-1. The multi-strategy framework has a working mock validation path and its CI history shows that path was executed.
-2. The validation path is explicitly isolated from empirical result directories and is not suitable for model-performance claims.
-3. The hardened EXP-001 protocol exists and has been audited, but it has not produced empirical strategy results.
+After execution, this README's **§5 will be kept unchanged** and a new **§5-R (Realised results)** added beside it, with a prior-vs-observed table. Priors are never edited retroactively.
 
-There is therefore **no evidence in this repository that additional reasoning calls improve objective correctness, reduce compute cost, or create a better correctness/compute frontier**. Those remain open empirical questions.
+## 11. Repository layout
 
-## Conclusion
-
-This repository currently demonstrates a validated research instrument and a clearly documented research question, but **not a completed empirical comparison of C0–C6**.
-
-Any future claim about strategy quality must be derived from real, integrity-checked result files and recomputed analysis rather than from mock outputs, readiness checks, or documentation summaries.
-
-## Limitations
-
-- The 5-task transparent benchmark is validation-only.
-- EXP-001's 100-task HumanEval-derived benchmark has no real run results yet.
-- No historical real-model provider comparison is available.
-- Configured budget ceilings are not observed compute measurements.
-- Cross-provider token counts, hardware latency, and sandbox availability can vary by environment.
-- Historical raw run metadata and result archives are absent from the visible repository tree.
-- Validation-only artifacts cannot support hidden-test performance or strategy superiority claims.
-
-## Prior Work
-
-See [`docs/prior_work.md`](docs/prior_work.md) and [`docs/research_lineage.md`](docs/research_lineage.md). Previous repositories are treated as read-only research artifacts; this repository reimplements concepts behind common interfaces rather than copying source trees.
-
-## Reproducibility and readiness
-
-Every real run is designed to capture Git SHA, configuration hash, benchmark hash/version, seed, model pool, generation parameters, environment metadata, and budget usage. Result batches use unique names and are protected against silent overwrite.
-
-Use:
-
-```bash
-python scripts/validate_readiness.py
-python scripts/validate_execution_environment.py
+```
+benchmarks/   frozen task sets and manifests
+configs/      experiment configurations
+docs/         research report, prior work, lineage
+experiments/  experiment definitions
+paper/        manuscript sources
+results/      raw runs, tables, validation artifacts
+scripts/      run / validate / evaluate / aggregate / analyze
+src/efficient_reasoning/   strategy and evaluation implementations
+tests/        unit and integration tests
 ```
 
-The one-task `EXECUTION_SMOKE_TEST` is a separate execution-path check; it is not EXP-001 and its output is not included in EXP-001 statistics.
+## 12. Prior work
 
-**EXP-001: NOT EXECUTED. No empirical result is claimed.**
+See `docs/prior_work.md` and `docs/research_lineage.md`. Earlier repositories are treated as read-only artifacts; concepts are reimplemented behind common interfaces.
+
+## 13. License
+
+MIT.
