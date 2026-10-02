@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+import copy
 import gzip
 import hashlib
 import json
@@ -73,47 +74,109 @@ def _check_function(test_source: str) -> ast.FunctionDef:
     raise ValueError("Test source does not define check(candidate)")
 
 
-def _top_level_asserts(test_source: str) -> list[ast.Assert]:
+def _validate_check_structure(test_source: str) -> ast.FunctionDef:
     check = _check_function(test_source)
-    asserts: list[ast.Assert] = []
-    for node in check.body:
-        if isinstance(node, ast.Assert):
-            asserts.append(node)
-        elif isinstance(node, ast.For):
-            # Frozen EXP-001 includes assertion-bearing loops (e.g. HumanEval/44).
-            # Keep each supported loop as one deterministic test unit; do not expand
-            # or alter the frozen source test semantics.
-            body_ok = all(
-                isinstance(child, ast.Assert)
-                for child in node.body
-            )
-            if body_ok and node.body and not node.orelse:
-                asserts.append(node)
-            else:
+
+    def validate_statements(statements: list[ast.stmt]) -> None:
+        for node in statements:
+            if isinstance(node, ast.Assert):
+                continue
+            if isinstance(node, (ast.Pass, ast.Return)):
+                continue
+            if isinstance(node, ast.Expr):
+                if isinstance(node.value, ast.Call) and isinstance(node.value.func, ast.Name) and node.value.func.id == "print":
+                    continue
+                if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+                    continue
                 raise ValueError(
                     f"Unsupported executable setup in check(candidate): {ast.unparse(node)}"
                 )
-        elif isinstance(node, ast.Expr) and isinstance(node.value, ast.Call):
-            # Bare `print` in historical HumanEval checks is harmless and has no
-            # bearing on correctness; it is excluded from both suites.
-            if isinstance(node.value.func, ast.Name) and node.value.func.id == "print":
+            if isinstance(node, (ast.For, ast.AsyncFor, ast.If, ast.While, ast.With, ast.AsyncWith, ast.Try)):
+                if isinstance(node, (ast.For, ast.AsyncFor, ast.While, ast.With, ast.AsyncWith)):
+                    validate_statements(node.body)
+                    validate_statements(node.orelse)
+                elif isinstance(node, ast.If):
+                    validate_statements(node.body)
+                    validate_statements(node.orelse)
+                else:
+                    validate_statements(node.body)
+                    validate_statements(node.orelse)
+                    validate_statements(node.finalbody)
+                    for handler in node.handlers:
+                        validate_statements(handler.body)
                 continue
             raise ValueError(
                 f"Unsupported executable setup in check(candidate): {ast.unparse(node)}"
             )
-        elif isinstance(node, (ast.Pass, ast.Expr)) and isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
-            # Ignore standalone string expressions/comments-like nodes.
-            continue
-        elif isinstance(node, (ast.Pass, ast.Return)):
-            continue
-        elif isinstance(node, (ast.Assign, ast.AnnAssign, ast.AugAssign, ast.For, ast.While, ast.If, ast.With, ast.Try, ast.Import, ast.ImportFrom, ast.FunctionDef, ast.ClassDef)):
-            raise ValueError(
-                f"Unsupported executable setup in check(candidate): {ast.unparse(node)}"
-            )
-        else:
-            raise ValueError(f"Unsupported check body node: {type(node).__name__}")
-    return asserts
 
+    validate_statements(check.body)
+    return check
+
+
+def _assert_nodes(check: ast.FunctionDef) -> list[ast.Assert]:
+    nodes: list[ast.Assert] = []
+
+    class Collector(ast.NodeVisitor):
+        def visit_Assert(self, node: ast.Assert) -> None:
+            nodes.append(node)
+
+        def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+            return
+
+        def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+            return
+
+        def visit_ClassDef(self, node: ast.ClassDef) -> None:
+            return
+
+    collector = Collector()
+    for node in check.body:
+        collector.visit(node)
+    return nodes
+
+
+def _assertion_blocks(check: ast.FunctionDef, assertion_count: int) -> list[str]:
+    blocks: list[str] = []
+
+    for target_index in range(assertion_count):
+        counter = 0
+
+        class IsolateAssertions(ast.NodeTransformer):
+            def visit_Assert(self, node: ast.Assert) -> ast.stmt:
+                nonlocal counter
+                current_index = counter
+                counter += 1
+                if current_index == target_index:
+                    return node
+                return ast.copy_location(ast.Pass(), node)
+
+            def visit_FunctionDef(self, node: ast.FunctionDef) -> ast.FunctionDef:
+                return node
+
+            def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> ast.AsyncFunctionDef:
+                return node
+
+            def visit_ClassDef(self, node: ast.ClassDef) -> ast.ClassDef:
+                return node
+
+        body = copy.deepcopy(check.body)
+        transformed = [IsolateAssertions().visit(node) for node in body]
+        module = ast.fix_missing_locations(ast.Module(body=transformed, type_ignores=[]))
+        blocks.append(ast.unparse(module))
+
+    return blocks
+
+
+def split_assertions(test_source: str) -> tuple[list[str], list[str], int]:
+    check = _validate_check_structure(test_source)
+    nodes = _assert_nodes(check)
+    if len(nodes) < 2:
+        raise ValueError("Each EXP-001 task must have at least two assertions")
+    blocks = _assertion_blocks(check, len(nodes))
+    cut = (len(blocks) + 1) // 2
+    visible = blocks[:cut]
+    hidden = blocks[cut:]
+    return visible, hidden, len(blocks)
 
 def split_assertions(test_source: str) -> tuple[list[str], list[str], int]:
     asserts = _top_level_asserts(test_source)
