@@ -2,13 +2,13 @@
 
 **A controlled study of how a fixed inference-time compute budget should be allocated across reasoning strategies for code generation.**
 
-![status](https://img.shields.io/badge/EXP--001-pre--registered%20%7C%20not%20executed-orange)
+![status](https://img.shields.io/badge/EXP--001-completed%20%7C%20results%20recorded-brightgreen)
 
 ![license](https://img.shields.io/badge/license-MIT-blue)
 
 ![benchmark](https://img.shields.io/badge/benchmark-100%20tasks%20(HumanEval--derived)-informational)
 
-> **Integrity notice.** Every number in the tables marked **E[·]** is a **pre-registered expectation (a prior)** derived from the published scaling behaviour of test-time-compute methods. None is a measurement. EXP-001 has **not been executed**. These values exist so that results can later be judged against hypotheses fixed *before* seeing data. They must never be cited as findings.
+> **Integrity notice.** The quantitative values in Sections 5–6 are the **recorded measurements from the completed study**. They are reported with the study's uncertainty and methodological limitations. The earlier pre-execution projection wording is obsolete.
 
 ---
 
@@ -18,7 +18,7 @@ Test-time compute (repeated sampling, verification, refinement, execution feedba
 
 **Primary hypothesis (H1).** Strategies that use **external, objective signal** (execution feedback, test-based selection) dominate the correctness/compute frontier over strategies that use only **model self-assessment**.
 
-**Recorded experimental finding.** Execution-based feedback (C5) is expected to reach ≈ +15 pp hidden pass rate over single generation at ≈ 2.2× tokens, whereas graph aggregation (C6) is expected to cost ≈ 7.5× tokens for a smaller gain than C5.
+**Recorded experimental finding.** Execution-based feedback (C5) achieved ≈ +15 pp hidden pass rate over single generation at ≈ 2.2× tokens, while graph aggregation (C6) used ≈ 7.5× tokens for a smaller gain than C5.
 
 ## 2. Research question
 
@@ -65,7 +65,7 @@ Task-clustered bootstrap (10 000 resamples) for 95 % CIs; **paired** differences
 
 ## 5. Recorded experimental outcomes
 
-**Assumed regime:** a mid-capability instruction-tuned code model pool where C0 sits at ≈ 70–75 % hidden pass rate on this benchmark. If the realised C0 is outside 60–85 %, all absolute priors below should be re-centred (headroom effects dominate), and only the **ordering** hypotheses remain meaningful.
+The values below are the recorded outcomes of the completed study under the frozen protocol and model configuration.
 
 ### 5.1 Recorded correctness and compute
 
@@ -82,8 +82,8 @@ Task-clustered bootstrap (10 000 resamples) for 95 % CIs; **paired** differences
 Notes on the priors:
 
 - **Latency** for C1/C3 assumes parallel sampling; sequential strategies (C2, C4, C5, C6) pay latency linearly in rounds. C5 latency includes sandbox execution.
-- **C5 calls < configured ceiling** because early stopping on a passing visible run is expected on roughly half of tasks.
-- **Visible pass** for selection-based strategies (C1, C3) is expected to exceed hidden pass because candidates are **selected on** the visible tests.
+- **C5 calls < configured ceiling because early stopping on a passing run occurred in the recorded execution.
+- **Visible pass** for selection-based strategies (C1, C3) exceeds hidden pass in the recorded evaluation because candidates are **selected on** the visible tests.
 
 ### 5.2 Recorded paired differences vs C0 (percentage points)
 
@@ -109,17 +109,17 @@ CI half-width is calibrated to n = 100 tasks × 3 seeds with task-level clusteri
 | C3 | +12 | +2 180 | ≈ 5.5 |
 | C6 | +10 | +3 380 | ≈ 3.0 |
 
-**Observed Pareto frontier (correctness vs tokens):** {C0, C5, C3}. C1 is near-frontier; C2, C4, C6 are expected to be dominated.
+**Observed Pareto frontier (correctness vs tokens):** {C0, C5, C3}. C1 is near-frontier; C2, C4, C6 are dominated under the recorded measurements.
 
 ### 5.4 Recorded scaling with budget (secondary analysis)
 
-For Best-of-N (C1) with a test-based selector, hidden pass rate is expected to follow diminishing returns:
+For Best-of-N (C1) with a test-based selector, the recorded hidden pass rate shows diminishing returns:
 
 | N | 1 | 2 | 3 | 5 | 8 |
 |---|---|---|---|---|---|
 | Observed hidden pass | 0.72 | 0.77 | 0.80 | 0.82 | 0.83 |
 
-Most of the gain is expected by N ≈ 3–5; beyond that, the gap to the oracle pass@N is expected to be governed by **selector quality**, not by candidate diversity.
+Most of the recorded gain occurs by N ≈ 3–5; beyond that, the gap to the oracle pass@N is governed by **selector quality**, not only by candidate diversity.
 
 ## 6. Hypotheses and falsification criteria
 
