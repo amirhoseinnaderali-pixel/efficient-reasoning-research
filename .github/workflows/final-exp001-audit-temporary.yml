@@ -1,0 +1,67 @@
+name: Final EXP001 Audit (temporary)
+on:
+  push:
+    branches:
+      - tmp/final-exp001-audit-20261002
+permissions:
+  contents: write
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Materialize frozen benchmark
+        run: PYTHONPATH=src python scripts/materialize_exp001_benchmark.py --manifest benchmarks/manifests/exp001_v1.json --output benchmarks/programming/exp001_v1/tasks.jsonl
+      - name: Verify benchmark completely
+        run: |
+          PYTHONPATH=src python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          from efficient_reasoning.experiments.readiness import validate_frozen_manifest, validate_materialized_benchmark
+          from efficient_reasoning.benchmarks.loader import load_tasks
+          mp=Path('benchmarks/manifests/exp001_v1.json'); tp=Path('benchmarks/programming/exp001_v1/tasks.jsonl')
+          m=validate_frozen_manifest(mp); validate_materialized_benchmark(m,tp); ts=load_tasks(tp)
+          expected=[x['task_id'] for x in m['tasks']]; observed=[t['id'] for t in ts]
+          assert observed==expected
+          assert len(ts)==100
+          print('TASK_COUNT:',len(ts)); print('TASK_ORDER_MATCH: true'); print('TASK_HASHES_VALIDATED: true')
+          print('TEST_HASHES_VALIDATED: true'); print('PROVENANCE_VALIDATED: true'); print('VISIBLE_HIDDEN_SPLITS_VALIDATED: true')
+          print('MANIFEST_CONTENT_SHA256:',m['integrity']['manifest_content_sha256'])
+          print('MATERIALIZED_SHA256:',hashlib.sha256(tp.read_bytes()).hexdigest())
+          print('SOURCE_COMMIT:',m['provenance']['source_commit'])
+          print('SOURCE_ARCHIVE_SHA256:',m['provenance']['source_archive_sha256'])
+          print('VISIBLE_COUNTS:',min(len(t['tests']['visible']['assertions']) for t in ts),max(len(t['tests']['visible']['assertions']) for t in ts))
+          print('HIDDEN_COUNTS:',min(len(t['tests']['hidden']['assertions']) for t in ts),max(len(t['tests']['hidden']['assertions']) for t in ts))
+          PY
+      - name: Commit materialized benchmark in audit branch
+        run: |
+          git config user.name "EXP-001 Audit"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -rf src/efficient_reasoning_research.egg-info
+          git add benchmarks/programming/exp001_v1/tasks.jsonl
+          git diff --cached --check
+          git commit -m "data: materialize frozen EXP-001 benchmark"
+          git push origin HEAD:tmp/final-exp001-audit-20261002
+      - name: Static tests and validators
+        run: |
+          PYTHONPATH=src python -m pytest -q
+          PYTHONPATH=src python -m compileall -q src scripts
+          PYTHONPATH=src python scripts/validate_experiment.py --config configs/experiments/exp001_fixed_budget.yaml
+      - name: Readiness
+        continue-on-error: true
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: PYTHONPATH=src python scripts/validate_readiness.py
+      - name: Execution environment
+        continue-on-error: true
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: PYTHONPATH=src python scripts/validate_execution_environment.py
+      - name: Real one-task smoke
+        if: env.READINESS_RC == '0' && env.ENVIRONMENT_RC == '0'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: PYTHONPATH=src python scripts/run_execution_smoke_test.py
