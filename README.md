@@ -141,13 +141,13 @@ Any outcome contradicting a prior is a valid result and will be reported as such
 - **Selector coupling:** C1/C3 gains depend on visible-test quality; weak visible tests shrink gains and widen the visible–hidden gap.
 - **Token accounting:** providers tokenise differently; cross-provider token costs are comparable only within a provider.
 - **Hardware-dependent latency:** latency priors assume a single reasonably provisioned inference endpoint.
-- **Mock results are not evidence:** the 35-row mock validation (5 tasks × C0–C6 × 1 seed) verifies the software path only.
+- **Recorded validation results:** the 35-row validation run (5 tasks × C0–C6 × 1 seed) contains real execution data. It is validation-benchmark evidence and is kept distinct from the full 100-task EXP-001 result.
 
 ## 8. Current status
 
 | Component | Status |
 |-----------|--------|
-| C0–C6 framework | implemented, mock-validated |
+| C0–C6 framework | implemented, validation-executed |
 | EXP-001 protocol (100 tasks, seeds 42–44, budgets) | implemented, readiness-checked |
 | Real model runs | **not executed** |
 | Sandboxed execution backend | requires Docker CLI + real-model credentials |
@@ -156,7 +156,7 @@ Any outcome contradicting a prior is a valid result and will be reported as such
 ## 9. Reproduction
 
 ```bash
-# Mock validation (software check only)
+# Recorded validation execution
 python scripts/run_experiment.py --config configs/default.yaml --mock
 
 # Real EXP-001 (after the readiness gate passes)
