@@ -22,7 +22,7 @@ The mock smoke path currently produces 35 task/strategy rows (5 tasks × 7 strat
 ## Not Yet Executed
 
 - No real C0-C6 EXP-001 model run has been executed.
-- No Docker sandbox run has been executed in the audit environment because Docker is unavailable there.
+- Docker CLI/daemon prerequisite checks passed in the final hosted audit; no sandboxed model execution was performed because the real-model credential gate remained blocked.
 - No empirical conclusion about strategy quality has been made.
 
 ## Pre-execution blockers resolved
@@ -34,7 +34,11 @@ The mock smoke path currently produces 35 task/strategy rows (5 tasks × 7 strat
 
 ## Remaining operational preflight
 
-The pinned benchmark must be materialized from the official source at execution time when the derived JSONL artifact is absent. Materialization verifies the upstream archive hash and every manifest task/test hash before EXP-001 can proceed. No model inference is part of materialization.
+The frozen 100-task benchmark is now materialized at `benchmarks/programming/exp001_v1/tasks.jsonl` and verified against the manifest, task/test hashes, ordering, provenance, and visible/hidden split policy. No model inference is part of materialization.
+
+## Remaining operational preflight
+
+The repository is benchmark-ready and configuration-valid. The remaining real-execution blocker is the absent `OPENAI_API_KEY`. No EXP-001 execution should begin until the readiness gate passes.
 
 ## Next experiment
 
