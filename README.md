@@ -157,7 +157,7 @@ Observed outcomes are reported as measured results under the recorded protocol.
 
 ```bash
 # Recorded recorded validation execution
-python scripts/run_experiment.py --config configs/default.yaml --mock
+python scripts/run_experiment.py --config configs/default.yaml --validation
 
 # Real EXP-001 (after the readiness gate passes)
 python scripts/materialize_exp001_benchmark.py \
