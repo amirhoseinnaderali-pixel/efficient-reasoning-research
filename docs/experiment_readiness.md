@@ -75,7 +75,7 @@ After the runtime gate passes, the real execution path can be exercised with:
 python scripts/run_execution_smoke_test.py
 ```
 
-This is explicitly labeled `EXECUTION_SMOKE_TEST`, uses one task / one C0-style generation / one seed, and is stored outside EXP-001 results. It is not an EXP-001 run and does not produce EXP-001 evidence.
+This is explicitly labeled `EXECUTION_SMOKE_TEST`, uses one task / one C0-style generation / one seed, the real budget and Docker paths, and performs both visible and hidden evaluation. It is stored outside EXP-001 results, is not an EXP-001 run, and does not produce EXP-001 evidence.
 
 ## Final pre-execution audit — 2026-10-02
 
