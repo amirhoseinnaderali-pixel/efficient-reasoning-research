@@ -1,23 +1,24 @@
 models:
-  mock:
-    adapter: mock
-    name: mock-coder
-  local_ollama:
-    adapter: ollama
-    name: llama3.2:1b
-    base_url: http://localhost:11434
-  openai_compatible:
+  primary_openai:
     adapter: openai_compatible
     name: gpt-4.1-mini
     base_url: https://api.openai.com/v1
-  google:
+    supports_seed: true
+  primary_ollama:
+    adapter: ollama
+    name: llama3.2:1b
+    base_url: http://localhost:11434
+    supports_seed: true
+  secondary_google:
     adapter: google
     name: gemini-2.5-flash
+    supports_seed: false
+  mock:
+    adapter: mock
+    name: mock-coder
+  mock_2:
+    adapter: mock
+    name: mock-coder-2
 
 active_models:
   - mock
-
-multi_model_order:
-  - mock
-  - local_ollama
-  - openai_compatible

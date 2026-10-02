@@ -3,4 +3,4 @@ benchmarks:
     path: benchmarks/programming/tasks.jsonl
     task_type: function_generation
     version: 1
-    provenance: "Repository-owned transparent benchmark; deterministic tests; no external labels modified."
+    provenance: "Repository-owned transparent benchmark; deterministic tests; labels are immutable benchmark artifacts."

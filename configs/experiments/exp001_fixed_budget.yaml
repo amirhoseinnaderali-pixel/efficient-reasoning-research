@@ -1,6 +1,7 @@
 project:
   name: efficient-reasoning-research
-  seed: 42
+  # Paired seeds: every strategy sees the same task-seed pairs.
+  seeds: [42, 43, 44]
 
 benchmark:
   name: transparent-python-mini-v1
@@ -9,9 +10,16 @@ benchmark:
 budget:
   max_model_calls: 8
   max_generated_tokens: 5000
+  max_input_tokens: 16000
   max_latency_seconds: 180
   max_execution_steps: 12
   max_candidates: 8
+
+generation:
+  max_output_tokens_per_call: 1200
+  temperature: 0.2
+  top_p: 1.0
+  timeout_seconds: 120
 
 execution:
   backend: docker
@@ -21,9 +29,12 @@ execution:
   network: none
   image: python:3.12-slim
 
+# First model is the common single-model baseline.
+# C3/C4 use the full heterogeneous pool.
 models:
-  - mock
-  # Replace/add real adapters for an actual EXP-001 run.
+  - primary_openai
+  - secondary_google
+  - primary_ollama
 
 strategies:
   c0_single:
@@ -45,9 +56,10 @@ strategies:
     type: graph_aggregation
     n: 4
     graph:
-      method: tfidf
+      method: tfidf_cosine
       k: 2
 
 runner:
   experiment_id: EXP-001
-  output_dir: results/raw
+  output_dir: results/raw/EXP-001
+  max_retries: 0

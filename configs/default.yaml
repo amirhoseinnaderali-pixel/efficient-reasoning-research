@@ -1,6 +1,6 @@
 project:
   name: efficient-reasoning-research
-  seed: 42
+  seeds: [42]
 
 benchmark:
   name: transparent-python-mini-v1
@@ -9,9 +9,18 @@ benchmark:
 budget:
   max_model_calls: 8
   max_generated_tokens: 4000
+  max_input_tokens: 12000
   max_latency_seconds: 180
   max_execution_steps: 12
   max_candidates: 8
+
+models: [mock, mock_2]
+
+generation:
+  max_output_tokens_per_call: 1200
+  temperature: 0.2
+  top_p: 1.0
+  timeout_seconds: 120
 
 execution:
   backend: mock
@@ -41,8 +50,10 @@ strategies:
     type: graph_aggregation
     n: 4
     graph:
-      method: tfidf
+      method: tfidf_cosine
       k: 2
 
 runner:
-  output_dir: results/raw
+  experiment_id: VALIDATION-SMOKE
+  output_dir: results/validation
+  max_retries: 0
