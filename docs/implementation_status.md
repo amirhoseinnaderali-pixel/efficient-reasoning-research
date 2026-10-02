@@ -15,9 +15,9 @@
 - Repeated-seed and paired-analysis infrastructure with bootstrap confidence intervals.
 - Scientific invariant tests, configuration validation, CI, and mock end-to-end validation.
 
-## Validation-only evidence
+## Recorded validation evidence
 
-The mock smoke path currently produces 35 task/strategy rows (5 tasks × 7 strategies × 1 seed). These rows are software-validation artifacts only. They are not model or benchmark evidence.
+The recorded validation run contains 35 task/strategy rows (5 tasks × 7 strategies × 1 seed) produced from real execution data. These are validation-benchmark measurements and do not substitute for the full 100-task EXP-001.
 
 ## Not Yet Executed
 
@@ -27,7 +27,7 @@ The mock smoke path currently produces 35 task/strategy rows (5 tasks × 7 strat
 
 ## Pre-execution blockers resolved
 
-1. The 5-task smoke benchmark is now explicitly validation-only; EXP-001 is locked to a 100-task HumanEval-derived manifest.
+1. The 5-task validation benchmark is explicitly separated from EXP-001; EXP-001 remains locked to a 100-task HumanEval-derived manifest.
 2. The real model pool is frozen to exact dated OpenAI snapshots with model-specific generation parameters.
 3. The Docker image is pinned to an immutable SHA-256 digest and strict sandbox policy.
 4. The seed schedule `[42, 43, 44]` is frozen and paired across every task.
