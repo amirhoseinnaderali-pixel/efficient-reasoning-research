@@ -35,6 +35,9 @@ def load_manifest(path: str | Path) -> dict[str, Any]:
     if missing:
         raise ValueError(f"Benchmark manifest missing fields: {sorted(missing)}")
     expected = data["integrity"].get("manifest_content_sha256")
+    materialized = data["integrity"].get("materialized_benchmark_sha256")
+    if not isinstance(materialized, str) or len(materialized) != SHA256_HEX or any(c not in "0123456789abcdef" for c in materialized):
+        raise ValueError("Manifest materialized benchmark SHA-256 is missing or invalid")
     actual = manifest_content_sha256(data)
     if expected != actual:
         raise ValueError(f"Benchmark manifest integrity mismatch: expected {expected}, got {actual}")
