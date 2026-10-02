@@ -1,34 +1,37 @@
 # Implementation Status
 
 ## Built
-- New modular research framework and common strategy interface.
-- C0–C6 reasoning strategies.
-- Mock, Ollama, OpenAI-compatible, and Google adapters.
-- Explicit budgets for calls/tokens/latency/execution/candidates.
-- Objective evaluation and Docker sandbox interface.
-- Transparent deterministic programming benchmark.
-- Graph aggregation baseline.
-- JSONL results + analysis scripts.
-- EXP-002/EXP-003 config stubs.
-- Unit tests and GitHub Actions CI.
-- Paper/lineage/reproducibility documentation.
 
-## Reused Concepts
-Sequential refinement ← `LLM_reasoning_solve_NQueen_with_no_code` / `codechain`.
-Execution feedback ← `Reasoning-Is-All-You-Need` / `multi-agent-react-sandbox`.
-Graph aggregation ← `graph_reasoning`.
-Benchmark accounting discipline ← DPO benchmark lineage.
+- Common strategy interface for C0-C6.
+- Explicit model-call, input-token, output-token, latency, execution-step, candidate, graph-time, and cost accounting.
+- Per-call generation cap based on remaining token budget.
+- Explicit generation parameters and deterministic seed schedule.
+- Verifier-assisted visible selection isolated to C1/C3/C5.
+- Hidden-only final evaluation through one objective evaluator.
+- Graph selection with explicit method validation and no objective-test access.
+- Fail-closed Docker execution with isolation controls.
+- Structured result schema validation and unique batch result files.
+- Reproducibility metadata including configuration and benchmark hashes.
+- Repeated-seed and paired-analysis infrastructure with bootstrap confidence intervals.
+- Scientific invariant tests, configuration validation, CI, and mock end-to-end validation.
+
+## Validation-only evidence
+
+The mock smoke path currently produces 35 task/strategy rows (5 tasks × 7 strategies × 1 seed). These rows are software-validation artifacts only. They are not model or benchmark evidence.
 
 ## Not Yet Executed
-- Real-model EXP-001.
-- EXP-002.
-- EXP-003.
 
-## Evidence Available
-Software tests + mock smoke test only; historical repositories as prior-work artifacts.
+- No real C0-C6 EXP-001 model run has been executed.
+- No Docker sandbox run has been executed in the audit environment because Docker is unavailable there.
+- No empirical conclusion about strategy quality has been made.
 
-## Unsupported Claims
-No superiority, SOTA, significance, or benchmark ranking is claimed.
+## Research limitations still present
 
-## Next Experiment
-After a valid EXP-001 run and replication: graph construction/aggregation ablations under matched budgets.
+1. The transparent benchmark contains only 5 tasks, which is too small for a substantive research claim or stable statistical conclusion.
+2. Real model selection must be frozen, documented, and run on the same task-seed pairs before interpretation.
+3. The Docker image should be pinned by digest for publication-grade replication.
+4. Provider-specific token accounting is only as reliable as each provider's usage metadata; missing usage must make a run ineligible rather than silently impute it.
+
+## Next experiment
+
+The natural next step is to replace the 5-task pilot with a sufficiently large, version-pinned programming benchmark while preserving the same visible/hidden protocol, then execute the pre-registered C0-C6 EXP-001 across all configured seeds.

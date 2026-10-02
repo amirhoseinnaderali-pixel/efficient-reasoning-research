@@ -1,10 +1,5 @@
 __pycache__/
-.pytest_cache/
 *.py[cod]
-.venv/
-.env
-results/raw/*.jsonl
-results/processed/*
-results/tables/*
-results/figures/*
-experiments/*/runs/
+.pytest_cache/
+results/raw/
+results/tables/
