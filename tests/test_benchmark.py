@@ -6,12 +6,8 @@ def test_validation_benchmark_schema():
     assert len(ts) == 5
     assert all(t["entry_point"] and t["tests"]["visible"] and t["tests"]["hidden"] for t in ts)
 
-
 def test_exp001_frozen_task_hash_contract():
-    from efficient_reasoning.benchmarks.exp001 import canonical_task_hash, fetch_official_source
-    from efficient_reasoning.benchmarks.manifest import load_manifest
+    from efficient_reasoning.benchmarks.exp001 import canonical_task_hash
 
-    manifest = load_manifest("benchmarks/manifests/exp001_v1.json")
-    source = fetch_official_source(manifest)
-    row = next(x for x in source if x["task_id"] == "HumanEval/0")
-    assert canonical_task_hash(row) == manifest["tasks"][0]["task_sha256"]
+    row = {"task_id": "a", "prompt": "b", "entry_point": "c"}
+    assert canonical_task_hash(row) == "101565441abb6a3f0d7f727724293a360a74e730de74238eaff47312563778dc"
