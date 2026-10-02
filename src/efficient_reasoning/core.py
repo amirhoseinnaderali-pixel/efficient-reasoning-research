@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from typing import Any
 
 
@@ -21,8 +21,9 @@ class Candidate:
     model: str
     generation: GenerationResult
     candidate_id: str
-    visible_score: float | None = None
     visible_pass: int | None = None
+    visible_total: int | None = None
+    visible_latency_seconds: float = 0.0
 
 
 @dataclass
@@ -37,13 +38,20 @@ class StrategyResult:
 @dataclass
 class BudgetSnapshot:
     model_calls: int
+    failed_model_calls: int
+    retries: int
     input_tokens: int
     output_tokens: int
     total_generated_tokens: int
-    latency_seconds: float
+    model_latency_seconds: float
+    execution_latency_seconds: float
+    graph_latency_seconds: float
+    strategy_wall_clock_seconds: float
     cost_proxy: float
     execution_steps: int
     candidate_count: int
+    budget_violated: bool
+    violation_reason: str | None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -52,8 +60,8 @@ class BudgetSnapshot:
 @dataclass
 class TaskEvaluation:
     task_id: str
-    visible_passed: int
-    visible_total: int
+    visible_passed: int | None
+    visible_total: int | None
     hidden_passed: int
     hidden_total: int
     executable: bool
@@ -66,5 +74,7 @@ class TaskEvaluation:
         return self.hidden_passed / self.hidden_total if self.hidden_total else 0.0
 
     @property
-    def visible_pass_rate(self) -> float:
-        return self.visible_passed / self.visible_total if self.visible_total else 0.0
+    def visible_pass_rate(self) -> float | None:
+        if self.visible_total in (None, 0):
+            return None
+        return self.visible_passed / self.visible_total
