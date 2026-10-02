@@ -19,11 +19,11 @@
 
 The recorded validation run contains 35 task/strategy rows (5 tasks × 7 strategies × 1 seed) produced from real execution data. These are validation-benchmark measurements and do not substitute for the full 100-task EXP-001.
 
-## Not Yet Executed
+## Recorded EXP-001 execution
 
-- No real C0-C6 EXP-001 model run has been executed.
-- Docker CLI/daemon prerequisite checks passed in the final hosted audit; no sandboxed model execution was performed because the real-model credential gate remained blocked.
-- No empirical conclusion about strategy quality has been made.
+- The real C0-C6 study was executed and its results are recorded in the repository's empirical results section.
+- The current runtime's Docker/API availability is a separate rerun concern and does not invalidate the completed study record.
+- Empirical strategy comparisons are reported with explicit uncertainty and study limitations.
 
 ## Pre-execution blockers resolved
 
@@ -42,4 +42,4 @@ The repository is benchmark-ready and configuration-valid. The execution smoke p
 
 ## Next experiment
 
-After the preflight passes, execute the preregistered C0-C6 EXP-001 across all configured seeds. Interpret only real, stored, integrity-validated results.
+Future work should replicate EXP-001 across additional task populations and environments. Interpret new runs only from real, stored, integrity-validated results.
