@@ -23,42 +23,73 @@ jobs:
           python -m pip install --upgrade pip
           pip install PyYAML pytest
 
+      - name: Diagnose frozen HumanEval task hash
+        run: |
+          PYTHONPATH=src python - <<'PY'
+          import gzip, hashlib, json, urllib.request
+          from efficient_reasoning.benchmarks.exp001 import canonical_task_hash
+          manifest=json.load(open("benchmarks/manifests/exp001_v1.json"))
+          p=manifest["provenance"]
+          req=urllib.request.Request(
+              f"https://raw.githubusercontent.com/openai/human-eval/{p['source_commit']}/{p['source_path']}",
+              headers={"User-Agent":"efficient-reasoning-research/1.0"},
+          )
+          with urllib.request.urlopen(req, timeout=30) as resp:
+              archive=resp.read()
+          row=next(
+              json.loads(line) for line in gzip.decompress(archive).decode("utf-8").splitlines()
+              if json.loads(line)["task_id"] == "HumanEval/0"
+          )
+          expected=manifest["tasks"][0]["task_sha256"]
+          payload={"task_id":row["task_id"],"prompt":row["prompt"],"entry_point":row["entry_point"]}
+          print("EXPECTED:", expected)
+          print("CURRENT_FUNCTION:", canonical_task_hash(row))
+          print("DEFAULT:", hashlib.sha256(json.dumps(payload).encode("utf-8")).hexdigest())
+          print("COMPACT:", hashlib.sha256(json.dumps(payload,separators=(',',':')).encode("utf-8")).hexdigest())
+          print("SORTED_COMPACT:", hashlib.sha256(json.dumps(payload,sort_keys=True,separators=(',',':')).encode("utf-8")).hexdigest())
+          print("PROMPT_RSTRIP_COMPACT:", hashlib.sha256(json.dumps({**payload,'prompt':row['prompt'].rstrip()},separators=(',',':')).encode("utf-8")).hexdigest())
+          print("PROMPT_STRIP_COMPACT:", hashlib.sha256(json.dumps({**payload,'prompt':row['prompt'].strip()},separators=(',',':')).encode("utf-8")).hexdigest())
+          print("PROMPT_LF_COMPACT:", hashlib.sha256(json.dumps({**payload,'prompt':row['prompt'].replace('\r\n','\n').replace('\r','\n')},separators=(',',':')).encode("utf-8")).hexdigest())
+          print("WITH_SOURCE_VERSION_COMPACT:", hashlib.sha256(json.dumps({**payload,'source_version':p['source_commit']},separators=(',',':')).encode("utf-8")).hexdigest())
+          print("TEST_SHA:", hashlib.sha256(row["test"].encode("utf-8")).hexdigest())
+          print("PROMPT_REPR:", repr(row["prompt"]))
+          PY
+
       - name: Materialize frozen EXP-001 benchmark
         id: materialize
+        continue-on-error: true
         run: |
           PYTHONPATH=src python scripts/materialize_exp001_benchmark.py \
             --manifest benchmarks/manifests/exp001_v1.json \
             --output benchmarks/programming/exp001_v1/tasks.jsonl
 
       - name: Verify frozen benchmark integrity
+        if: steps.materialize.outcome == 'success'
         run: |
           PYTHONPATH=src python - <<'PY'
-          import hashlib, json
+          import hashlib
           from pathlib import Path
           from efficient_reasoning.experiments.readiness import validate_frozen_manifest, validate_materialized_benchmark
           from efficient_reasoning.benchmarks.loader import load_tasks
-
-          manifest_path = Path("benchmarks/manifests/exp001_v1.json")
-          tasks_path = Path("benchmarks/programming/exp001_v1/tasks.jsonl")
-          manifest = validate_frozen_manifest(manifest_path)
-          validate_materialized_benchmark(manifest, tasks_path)
-          tasks = load_tasks(tasks_path)
-          expected_ids = [x["task_id"] for x in manifest["tasks"]]
-          observed_ids = [x["id"] for x in tasks]
-          assert observed_ids == expected_ids
+          manifest_path=Path("benchmarks/manifests/exp001_v1.json")
+          tasks_path=Path("benchmarks/programming/exp001_v1/tasks.jsonl")
+          manifest=validate_frozen_manifest(manifest_path)
+          validate_materialized_benchmark(manifest,tasks_path)
+          tasks=load_tasks(tasks_path)
+          ids=[t["id"] for t in tasks]
+          assert ids == [x["task_id"] for x in manifest["tasks"]]
           print("TASK_COUNT:", len(tasks))
-          print("TASK_ORDER_MATCH:", observed_ids == expected_ids)
+          print("TASK_ORDER_MATCH: true")
           print("TASK_HASHES_VALIDATED: true")
           print("TEST_HASHES_VALIDATED: true")
           print("PROVENANCE_VALIDATED: true")
           print("VISIBLE_HIDDEN_SPLITS_VALIDATED: true")
           print("MANIFEST_SHA256:", hashlib.sha256(manifest_path.read_bytes()).hexdigest())
           print("MATERIALIZED_SHA256:", hashlib.sha256(tasks_path.read_bytes()).hexdigest())
-          print("SOURCE_COMMIT:", manifest["provenance"]["source_commit"])
-          print("SOURCE_ARCHIVE_SHA256:", manifest["provenance"]["source_archive_sha256"])
           PY
 
       - name: Commit materialized benchmark
+        if: steps.materialize.outcome == 'success'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -89,6 +120,7 @@ jobs:
       - name: Summary
         if: always()
         run: |
+          echo "MATERIALIZE_OUTCOME: ${{ steps.materialize.outcome }}"
           echo "READINESS_OUTCOME: ${{ steps.readiness.outcome }}"
           echo "EXECUTION_ENVIRONMENT_OUTCOME: ${{ steps.environment.outcome }}"
           echo "SMOKE_TEST_OUTCOME: ${{ steps.smoke.outcome }}"
@@ -97,6 +129,8 @@ jobs:
       - name: Remove temporary workflow
         if: always()
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git rm .github/workflows/exp001_finalize_audit.yml
           git add -A
           git commit -m "chore: remove temporary EXP-001 final audit workflow"
