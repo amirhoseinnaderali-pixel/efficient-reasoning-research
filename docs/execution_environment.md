@@ -45,20 +45,20 @@ The smoke test is explicitly labeled `EXECUTION_SMOKE_TEST`, uses exactly one ta
 
 **The smoke test is not EXP-001. Its output is not included in EXP-001 statistics or evidence.**
 
+## Final hosted pre-execution audit — 2026-10-02
+
+The final clean audit checkout reported:
+
+- frozen configuration: valid;
+- materialized benchmark: present and integrity-checked;
+- Docker CLI: present;
+- Docker daemon check: reachable;
+- model credential: **absent**;
+- readiness: **NOT READY** with exactly one blocker, `OPENAI_API_KEY is missing`;
+- real one-task smoke test: fail-closed at the readiness boundary.
+
+No model inference, Docker benchmark execution, or EXP-001 evidence was produced.
+
 ## EXP-001 status
 
-EXP-001 has **not** been executed during repository preparation or hardening. No empirical result is implied by readiness validation or the smoke-test infrastructure.
-
-## Expected failure modes
-
-The validators intentionally fail closed for conditions such as:
-
-- missing materialized benchmark;
-- task/test provenance mismatch;
-- invalid or non-digest Docker image;
-- missing Docker CLI or unreachable daemon;
-- wrong execution platform or sandbox policy;
-- missing `OPENAI_API_KEY`;
-- mock model configuration in a real EXP-001 path;
-- frozen seed/model/configuration drift;
-- dirty Git worktree or missing Git SHA.
+EXP-001 has **not** been executed. No empirical result is implied by readiness validation or the smoke-test infrastructure.
