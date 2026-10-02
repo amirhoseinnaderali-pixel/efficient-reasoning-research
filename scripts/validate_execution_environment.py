@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail-closed static and environment gate for real EXP-001 execution."""
+"""Validate the real execution environment without running EXP-001 or model inference."""
 from __future__ import annotations
 
 import argparse
@@ -23,14 +23,14 @@ def main() -> int:
     benchmarks = load_yaml(ROOT / "configs/benchmarks.yaml")
     failures, report = collect_execution_environment_failures(ROOT, cfg, models, benchmarks)
 
-    print(f"GIT_SHA: {report.get('git_sha') or 'UNKNOWN'}")
-    print(f"GIT_BRANCH: {report.get('git_branch') or 'UNKNOWN'}")
-    print(f"GIT_WORKTREE_CLEAN: {report.get('git_worktree_clean')}")
-    print(f"MODEL_ACCESS_CREDENTIAL_PRESENT: {report.get('openai_api_key_present')}")
+    print(f"EXECUTION_ENVIRONMENT_GIT_SHA: {report.get('git_sha') or 'UNKNOWN'}")
+    print(f"EXECUTION_ENVIRONMENT_BRANCH: {report.get('git_branch') or 'UNKNOWN'}")
+    print(f"WORKTREE_CLEAN: {report.get('git_worktree_clean')}")
     print(f"DOCKER_CLI_PRESENT: {report.get('docker_cli')}")
-    print(f"BENCHMARK_STATUS: {report.get('benchmark')}")
-    print(f"CONFIGURATION_STATUS: {report.get('configuration')}")
-    print(f"EXP001_READINESS_FAILURE_COUNT: {len(failures)}")
+    print(f"DOCKER_DAEMON: {report.get('docker_daemon')}")
+    print(f"OPENAI_API_KEY_PRESENT: {report.get('openai_api_key_present')}")
+    print(f"CONFIGURATION: {report.get('configuration')}")
+    print(f"BENCHMARK: {report.get('benchmark')}")
     if failures:
         for failure in failures:
             print(f"NOT_READY: {failure}")

@@ -71,6 +71,17 @@ See [`docs/prior_work.md`](docs/prior_work.md) and [`docs/research_lineage.md`](
 
 Every real run captures git SHA, configuration hash, benchmark hash/version, seed, model pool, generation parameters, environment metadata, and budget usage. Results use unique batch files and cannot silently overwrite existing runs.
 
-## Current Readiness
+## Readiness and execution status
 
-**READY FOR EXECUTION.** EXP-001 is now locked to a 100-task benchmark manifest, exact dated model snapshots, an immutable Docker image digest, paired seeds `[42, 43, 44]`, explicit strategy model pools, and hard preflight validation. No real EXP-001 inference has been executed during preparation.
+The **research configuration** is frozen: EXP-001 uses a 100-task HumanEval-derived manifest, exact dated model snapshots, an immutable Docker image digest, paired seeds `[42, 43, 44]`, explicit strategy model pools, and hard preflight validation.
+
+Local **runtime readiness is environment-dependent** and is not implied by the repository state. Use:
+
+```bash
+python scripts/validate_readiness.py
+python scripts/validate_execution_environment.py
+```
+
+Both commands fail closed when a real prerequisite is missing. The one-task `EXECUTION_SMOKE_TEST` is a separate execution-path check; it is not EXP-001.
+
+**EXP-001: NOT EXECUTED.** No empirical result is claimed.

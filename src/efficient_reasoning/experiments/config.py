@@ -146,18 +146,55 @@ def validate_config(cfg: dict[str, Any], models_cfg: dict[str, Any], benchmarks_
             raise ValueError("EXP-001 requires docker_strict_v1 sandbox policy")
 
     if is_exp001:
+        frozen_budget = {
+            "max_model_calls": 8,
+            "max_generated_tokens": 9600,
+            "max_input_tokens": 40000,
+            "max_latency_seconds": 300,
+            "max_execution_steps": 12,
+            "max_candidates": 8,
+        }
+        if {key: budget[key] for key in frozen_budget} != frozen_budget:
+            raise ValueError("EXP-001 budget is not the frozen protocol budget")
+        if cfg["models"] != ["primary_openai", "secondary_openai"]:
+            raise ValueError("EXP-001 top-level model list is not frozen")
+        frozen_strategy_specs = {
+            "c0_single": {"type": "single", "model_pool": ["primary_openai"]},
+            "c1_best_of_n": {"type": "best_of_n", "n": 4, "model_pool": ["primary_openai"]},
+            "c2_sequential_refinement": {"type": "sequential_refinement", "depth": 3, "model_pool": ["primary_openai"]},
+            "c3_multi_model": {"type": "multi_model", "model_pool": ["primary_openai", "secondary_openai"]},
+            "c4_multi_model_chain": {"type": "multi_model_chain", "model_pool": ["primary_openai", "secondary_openai"]},
+            "c5_execution_feedback": {"type": "execution_feedback", "max_iterations": 3, "model_pool": ["primary_openai"]},
+            "c6_graph_aggregation": {
+                "type": "graph_aggregation", "n": 4, "model_pool": ["primary_openai"],
+                "graph": {"method": "tfidf_cosine", "k": 2, "embedding_model": "tfidf_builtin_v1", "selection_input": "candidate_text_only", "uses_objective_results": False},
+            },
+        }
+        if cfg["strategies"] != frozen_strategy_specs:
+            raise ValueError("EXP-001 strategy configuration is not the frozen C0-C6 protocol")
+        if cfg["generation"] != {"max_output_tokens_per_call": 1200, "timeout_seconds": 120, "seed_mode": "task_seed_v1"}:
+            raise ValueError("EXP-001 generation configuration is not frozen")
+
+        frozen_model_ids = {
+            "primary_openai": "gpt-4.1-mini-2025-04-14",
+            "secondary_openai": "gpt-4.1-2025-04-14",
+        }
+        frozen_generation = {"temperature": 0.2, "top_p": 1.0, "max_tokens": 1200}
         for model_name in models:
             spec = models_cfg["models"][model_name]
+            if model_name not in frozen_model_ids:
+                raise ValueError(f"EXP-001 model {model_name} is not part of the frozen model pool")
             adapter = spec.get("adapter")
             if adapter != "openai_compatible":
                 raise ValueError(f"EXP-001 model {model_name} must use the pinned OpenAI-compatible adapter")
             model_id = str(spec.get("model_id", spec.get("name", "")))
-            if not model_id or model_id in {"latest", "default", "auto", "recommended"}:
-                raise ValueError(f"EXP-001 model {model_name} is not pinned")
-            if not any(model_id.endswith(f"-{d}") for d in ("2025-04-14", "2025-02-14")):
-                raise ValueError(f"EXP-001 model {model_name} must use an exact dated snapshot")
-            gen = spec.get("generation_config")
-            if not isinstance(gen, dict) or any(k not in gen for k in ("temperature", "top_p", "max_tokens")):
-                raise ValueError(f"EXP-001 model {model_name} has incomplete generation configuration")
+            if model_id != frozen_model_ids[model_name]:
+                raise ValueError(f"EXP-001 model {model_name} must be exactly {frozen_model_ids[model_name]}")
+            if spec.get("provider") != "openai" or spec.get("base_url") != "https://api.openai.com/v1":
+                raise ValueError(f"EXP-001 model {model_name} provider/base URL is not frozen")
+            if spec.get("api_version") != "chat_completions_v1":
+                raise ValueError(f"EXP-001 model {model_name} API mode is not frozen")
             if not bool(spec.get("supports_seed")):
                 raise ValueError(f"EXP-001 model {model_name} must support deterministic seed requests")
+            if spec.get("generation_config") != frozen_generation:
+                raise ValueError(f"EXP-001 model {model_name} generation configuration is not frozen")
