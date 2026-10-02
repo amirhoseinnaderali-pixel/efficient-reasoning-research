@@ -26,7 +26,8 @@ class ReasoningStrategy(ABC):
         remaining = self.budget.remaining_generated_tokens
         if remaining <= 0:
             raise RuntimeError("No generated-token budget remains")
-        requested = int(self.generation.get("max_output_tokens_per_call", remaining))
+        model_generation = adapter.config.get("generation_config", {})
+        requested = int(self.generation.get("max_output_tokens_per_call", model_generation.get("max_tokens", remaining)))
         max_tokens = min(requested, remaining)
         remaining_latency = self.budget.remaining_latency_seconds
         if remaining_latency <= 0:
@@ -38,10 +39,10 @@ class ReasoningStrategy(ABC):
             result = adapter.generate(
                 prompt,
                 max_tokens=max_tokens,
-                temperature=float(self.generation.get("temperature", 0.2)),
+                temperature=float(model_generation.get("temperature", self.generation.get("temperature", 0.2))),
                 timeout_seconds=max(0.1, timeout_seconds),
                 seed=seed,
-                top_p=float(self.generation.get("top_p", 1.0)),
+                top_p=float(model_generation.get("top_p", self.generation.get("top_p", 1.0))),
             )
         except Exception:
             self.budget.record_failed_call(time.perf_counter() - started)

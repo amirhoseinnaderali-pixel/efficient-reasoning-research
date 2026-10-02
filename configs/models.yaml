@@ -1,24 +1,67 @@
 models:
   primary_openai:
+    provider: openai
     adapter: openai_compatible
-    name: gpt-4.1-mini
+    name: gpt-4.1-mini-2025-04-14
+    model_id: gpt-4.1-mini-2025-04-14
     base_url: https://api.openai.com/v1
+    api_version: chat_completions_v1
+    supports_seed: true
+    generation_config:
+      temperature: 0.2
+      top_p: 1.0
+      max_tokens: 1200
+    pricing:
+      basis: standard_api_per_1m_tokens
+      effective_date: 2026-10-02
+      input_usd_per_1m: 0.40
+      output_usd_per_1m: 1.60
+      source: https://developers.openai.com/api/docs/models/gpt-4.1-mini
+  secondary_openai:
+    provider: openai
+    adapter: openai_compatible
+    name: gpt-4.1-2025-04-14
+    model_id: gpt-4.1-2025-04-14
+    base_url: https://api.openai.com/v1
+    api_version: chat_completions_v1
+    supports_seed: true
+    generation_config:
+      temperature: 0.2
+      top_p: 1.0
+      max_tokens: 1200
+    pricing:
+      basis: standard_api_per_1m_tokens
+      effective_date: 2026-10-02
+      input_usd_per_1m: 2.00
+      output_usd_per_1m: 8.00
+      source: https://developers.openai.com/api/docs/models/gpt-4.1
+  mock:
+    provider: mock
+    adapter: mock
+    name: mock-coder
+    model_id: mock-coder
+    supports_seed: true
+  mock_2:
+    provider: mock
+    adapter: mock
+    name: mock-coder-2
+    model_id: mock-coder-2
     supports_seed: true
   primary_ollama:
+    provider: ollama
     adapter: ollama
     name: llama3.2:1b
+    model_id: llama3.2:1b
     base_url: http://localhost:11434
     supports_seed: true
   secondary_google:
+    provider: google
     adapter: google
     name: gemini-2.5-flash
+    model_id: gemini-2.5-flash
+    base_url: https://generativelanguage.googleapis.com/v1beta
     supports_seed: false
-  mock:
-    adapter: mock
-    name: mock-coder
-  mock_2:
-    adapter: mock
-    name: mock-coder-2
 
 active_models:
-  - mock
+  - primary_openai
+  - secondary_openai

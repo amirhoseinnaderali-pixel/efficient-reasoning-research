@@ -4,7 +4,7 @@ project:
 
 benchmark:
   name: transparent-python-mini-v1
-  tasks_path: benchmarks/programming/tasks.jsonl
+  tasks_path: benchmarks/programming/smoke_tasks.jsonl
 
 budget:
   max_model_calls: 8

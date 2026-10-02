@@ -87,13 +87,20 @@ class OpenAICompatibleAdapter(BaseModelAdapter):
         data = _post_json(base + "/chat/completions", payload, {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}, timeout_seconds)
         dt = time.perf_counter() - t
         usage = data.get("usage", {})
+        input_tokens = int(usage.get("prompt_tokens", 0) or 0)
+        output_tokens = int(usage.get("completion_tokens", 0) or 0)
+        pricing = self.config.get("pricing", {})
+        cost = None
+        if "input_usd_per_1m" in pricing and "output_usd_per_1m" in pricing:
+            cost = input_tokens / 1_000_000 * float(pricing["input_usd_per_1m"]) + output_tokens / 1_000_000 * float(pricing["output_usd_per_1m"])
         return GenerationResult(
             data["choices"][0]["message"]["content"],
             self.model,
-            int(usage.get("prompt_tokens", 0) or 0),
-            int(usage.get("completion_tokens", 0) or 0),
+            input_tokens,
+            output_tokens,
             dt,
-            metadata={"provider": self.provider, "usage_reported": "prompt_tokens" in usage and "completion_tokens" in usage, "seed_enforced": seed is not None and seed_supported, "generation_parameters": {"temperature": temperature, "seed": seed if seed_supported else None, "top_p": top_p}},
+            cost,
+            metadata={"provider": self.provider, "usage_reported": "prompt_tokens" in usage and "completion_tokens" in usage, "seed_enforced": seed is not None and seed_supported, "system_fingerprint": data.get("system_fingerprint"), "generation_parameters": {"temperature": temperature, "seed": seed if seed_supported else None, "top_p": top_p, "max_tokens": max_tokens}},
         )
 
 

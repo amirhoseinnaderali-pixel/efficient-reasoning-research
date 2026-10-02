@@ -11,6 +11,7 @@ import uuid
 from pathlib import Path
 
 from ..benchmarks.loader import benchmark_sha256, load_tasks
+from ..benchmarks.manifest import validate_manifest_path
 from ..budgeting.budget import Budget, BudgetExceeded
 from ..evaluation.evaluator import ObjectiveEvaluator
 from ..logging.schema import validate_result
@@ -70,6 +71,7 @@ def make_executor(cfg, mock=False):
         memory_mb=int(cfg["memory_mb"]),
         cpus=float(cfg["cpus"]),
         image=cfg["image"],
+        platform=cfg.get("platform", "linux/amd64"),
     )
 
 
@@ -95,14 +97,24 @@ def run(config_path, mock=False):
     model_cfg = load_yaml("configs/models.yaml")
     benchmark_cfg = load_yaml("configs/benchmarks.yaml")
     validate_config(cfg, model_cfg, benchmark_cfg, allow_mock=mock)
+    manifest = None
+    if cfg["runner"].get("require_materialized_benchmark"):
+        manifest = validate_manifest_path(cfg["benchmark"]["manifest_path"])
+        tasks_path = Path(cfg["benchmark"]["tasks_path"])
+        if not tasks_path.exists():
+            raise RuntimeError("EXP-001 benchmark is not materialized; run scripts/materialize_exp001_benchmark.py before real execution")
     tasks = load_tasks(cfg["benchmark"]["tasks_path"])
-    specs = [model_cfg["models"][name] for name in cfg["models"]]
+    if manifest is not None and len(tasks) != int(manifest["task_count"]):
+        raise RuntimeError("Materialized benchmark task count does not match frozen manifest")
+    specs_by_name = {name: model_cfg["models"][name] for name in cfg["models"]}
+    specs = list(specs_by_name.values())
     exp_hash = _experiment_hash(cfg)
     env_base = _environment()
     env_base.update(
         {
             "config_sha256": exp_hash,
             "benchmark_sha256": benchmark_sha256(cfg["benchmark"]["tasks_path"]),
+            "benchmark_manifest_sha256": manifest["integrity"]["manifest_content_sha256"] if manifest else None,
             "benchmark_name": cfg["benchmark"]["name"],
             "benchmark_version": benchmark_cfg["benchmarks"][cfg["benchmark"]["name"]]["version"],
             "mock_validation_only": bool(mock),
@@ -117,7 +129,10 @@ def run(config_path, mock=False):
                 budget = Budget(**cfg["budget"])
                 executor = make_executor(cfg["execution"], mock)
                 evaluator = ObjectiveEvaluator(executor, budget)
-                adapters = [make_adapter(spec, task["id"], mock) for spec in specs]
+                adapter_cache = {name: make_adapter(spec, task["id"], mock) for name, spec in specs_by_name.items()}
+                default_pool = cfg["models"]
+                pool_names = strategy_cfg.get("model_pool", default_pool)
+                adapters = [adapter_cache[name] for name in pool_names]
                 primary = adapters[0]
                 strategy_seed = _task_seed(int(seed), task["id"])
                 result = None
@@ -166,9 +181,12 @@ def run(config_path, mock=False):
                     "run_id": f"{batch_id}__seed{seed}__{task['id']}__{strategy_name}",
                     "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                     "strategy": strategy_name,
-                    "model": specs[0]["name"],
-                    "model_pool": [s["name"] for s in specs],
-                    "generation_config": cfg["generation"],
+                    "model": specs_by_name[strategy_cfg.get("model_pool", cfg["models"])[0]]["model_id"],
+                    "model_pool": [specs_by_name[n]["model_id"] for n in strategy_cfg.get("model_pool", cfg["models"])],
+                    "generation_config": {
+                        "global": cfg["generation"],
+                        "model_specific": {n: specs_by_name[n].get("generation_config", {}) for n in strategy_cfg.get("model_pool", cfg["models"])},
+                    },
                     "config_path": str(config_path),
                     "benchmark": {"name": cfg["benchmark"]["name"], "version": env_base["benchmark_version"], "sha256": env_base["benchmark_sha256"]},
                     "seed": int(seed),
@@ -206,11 +224,13 @@ def run(config_path, mock=False):
                     ],
                     "trace": [] if result is None else result.trace,
                     "notes": {"validation_only": bool(mock), **({} if result is None else result.notes)},
-                    "environment": env_base | {"model_config": specs},
+                    "environment": env_base | {"model_config": {n: specs_by_name[n] for n in strategy_cfg.get("model_pool", cfg["models"])}, "execution": cfg["execution"]},
                 }
                 rows.append(row)
 
     output_dir = Path("results/validation") if mock else Path(cfg["runner"]["output_dir"])
     out = output_dir / f"{batch_id}.jsonl"
+    if not mock and cfg["runner"].get("forbid_existing_output_overwrite") and out.exists():
+        raise FileExistsError(f"Refusing to overwrite existing EXP-001 result file: {out}")
     _write_batch(out, rows)
     return out

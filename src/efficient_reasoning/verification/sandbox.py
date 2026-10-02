@@ -8,6 +8,9 @@ import time
 from dataclasses import dataclass
 
 
+PINNED_DEFAULT_IMAGE = "python:3.12-slim-bookworm@sha256:392307d22300de8b5986851a12d9176dfc0fc073e65bf6523ebd7dcbeb23564e"
+
+
 @dataclass
 class ExecutionResult:
     passed: int
@@ -27,50 +30,86 @@ class MockExecutor:
 
     def run(self, code, task, suite="visible", timeout_seconds=None):
         del code, timeout_seconds
-        total = len(task["tests"][suite])
+        suite_data = task["tests"][suite]
+        total = len(suite_data if isinstance(suite_data, list) else suite_data["assertions"])
         passed = int(round(total * self.expected_pass_rate))
         return ExecutionResult(passed, total, None, 0.0, 1)
 
 
 class DockerExecutor:
-    def __init__(self, timeout_seconds=3, memory_mb=256, cpus=1.0, image="python:3.12-slim"):
+    def __init__(
+        self,
+        timeout_seconds=3,
+        memory_mb=256,
+        cpus=1.0,
+        image=PINNED_DEFAULT_IMAGE,
+        platform="linux/amd64",
+        pid_limit=64,
+    ):
         if not shutil.which("docker"):
             raise RuntimeError("Docker CLI is required for the real execution backend; safe execution cannot be emulated on the host")
-        if not image:
-            raise ValueError("A pinned Docker image reference is required")
+        if "@sha256:" not in image:
+            raise ValueError("Real Docker execution requires an immutable image@sha256 digest")
+        digest = image.split("@sha256:", 1)[1]
+        if len(digest) != 64 or any(c not in "0123456789abcdef" for c in digest):
+            raise ValueError("Docker image digest must be a lowercase SHA-256 digest")
         self.timeout_seconds = float(timeout_seconds)
         self.memory_mb = int(memory_mb)
         self.cpus = float(cpus)
         self.image = image
+        self.platform = platform
+        self.pid_limit = int(pid_limit)
+
+    @staticmethod
+    def _suite_total(suite_data):
+        return len(suite_data if isinstance(suite_data, list) else suite_data.get("assertions", []))
 
     def run(self, code, task, suite="visible", timeout_seconds=None):
-        payload = {"code": code, "entry_point": task["entry_point"], "tests": task["tests"][suite]}
+        suite_data = task["tests"][suite]
+        payload = {"code": code, "entry_point": task["entry_point"], "tests": suite_data}
         enc = base64.b64encode(json.dumps(payload).encode()).decode()
-        runner = r'''import base64,contextlib,io,json,sys,traceback
+        runner = r'''import base64,json,sys,traceback
 p=json.loads(base64.b64decode(sys.argv[1]).decode())
 open('/tmp/solution.py','w').write(p['code'])
 ns={}
 try:
- exec(compile(p['code'],'/tmp/solution.py','exec'),ns,ns)
- fn=ns[p['entry_point']]
- passed=0
- sink=io.StringIO()
- with contextlib.redirect_stdout(sink), contextlib.redirect_stderr(sink):
-  for t in p['tests']:
-   got=fn(*t.get('args',[]),**t.get('kwargs',{}))
-   if got==t['expected']: passed+=1
- print(json.dumps({'passed':passed,'total':len(p['tests'])}))
+    exec(compile(p['code'],'/tmp/solution.py','exec'),ns,ns)
+    fn=ns[p['entry_point']]
+    suite=p['tests']
+    passed=0
+    if isinstance(suite, list):
+        for t in suite:
+            got=fn(*t.get('args',[]),**t.get('kwargs',{}))
+            if got==t['expected']:
+                passed+=1
+        total=len(suite)
+    else:
+        setup=suite.get('setup','')
+        assertions=suite.get('assertions',[])
+        total=len(assertions)
+        for assertion in assertions:
+            local=dict(ns)
+            local['candidate']=fn
+            if setup:
+                exec(compile(setup,'/tmp/harness_setup.py','exec'),local,local)
+            try:
+                exec(compile(assertion,'/tmp/assertion.py','exec'),local,local)
+                passed+=1
+            except Exception:
+                pass
+    print(json.dumps({'passed':passed,'total':total}))
 except Exception:
- print(traceback.format_exc(),file=sys.stderr)
- print(json.dumps({'passed':0,'total':len(p['tests'])}))
- sys.exit(2)
+    print(traceback.format_exc(),file=sys.stderr)
+    total=len(p['tests']) if isinstance(p['tests'],list) else len(p['tests'].get('assertions',[]))
+    print(json.dumps({'passed':0,'total':total}))
+    sys.exit(2)
 '''
         effective_timeout = min(self.timeout_seconds, float(timeout_seconds)) if timeout_seconds is not None else self.timeout_seconds
         if effective_timeout <= 0:
-            return ExecutionResult(0, len(task["tests"][suite]), "execution budget exhausted before sandbox launch", 0.0, 1)
+            return ExecutionResult(0, self._suite_total(suite_data), "execution budget exhausted before sandbox launch", 0.0, 1)
         cmd = [
-            "docker", "run", "--rm", "--init", "--network", "none",
-            "--cpus", str(self.cpus), "--memory", f"{self.memory_mb}m", "--pids-limit", "64",
+            "docker", "run", "--rm", "--init", "--network", "none", "--platform", self.platform,
+            "--cpus", str(self.cpus), "--memory", f"{self.memory_mb}m", "--pids-limit", str(self.pid_limit),
             "--read-only", "--tmpfs", "/tmp:rw,nosuid,nodev,noexec,size=64m",
             "--security-opt", "no-new-privileges", "--cap-drop", "ALL", "--security-opt", "seccomp=default",
             "--ulimit", "fsize=1048576:1048576",
@@ -80,9 +119,9 @@ except Exception:
         try:
             proc = subprocess.run(cmd, text=True, capture_output=True, timeout=effective_timeout)
         except subprocess.TimeoutExpired:
-            return ExecutionResult(0, len(task["tests"][suite]), "timeout", time.perf_counter() - started, 1)
+            return ExecutionResult(0, self._suite_total(suite_data), "timeout", time.perf_counter() - started, 1)
         except OSError as exc:
-            return ExecutionResult(0, len(task["tests"][suite]), f"sandbox launch failed: {exc}", time.perf_counter() - started, 1)
+            return ExecutionResult(0, self._suite_total(suite_data), f"sandbox launch failed: {exc}", time.perf_counter() - started, 1)
         latency = time.perf_counter() - started
         stdout_lines = proc.stdout.strip().splitlines()
         try:
@@ -90,6 +129,6 @@ except Exception:
             passed = int(data["passed"])
             total = int(data["total"])
         except (IndexError, KeyError, TypeError, ValueError, json.JSONDecodeError):
-            passed, total = 0, len(task["tests"][suite])
+            passed, total = 0, self._suite_total(suite_data)
         error = proc.stderr.strip() or (f"container exit {proc.returncode}" if proc.returncode else None)
         return ExecutionResult(passed, total, error, latency, 1)

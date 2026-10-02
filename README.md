@@ -24,7 +24,7 @@ This is an empirical question. No strategy is assumed to be superior before cont
 
 The framework now enforces explicit call/token/time/execution/candidate budgets, separates visible selection from hidden final scoring, blocks mock adapters from real experiment configs, validates result schemas, and records reproducibility metadata.
 
-The current 5-task transparent benchmark is a **pilot validation benchmark**, not sufficient by itself for a substantive empirical claim. Expand/freeze the benchmark and model configuration before treating EXP-001 as publication evidence.
+The 5-task transparent benchmark remains validation-only. EXP-001 now uses a frozen 100-task HumanEval-derived manifest with source/test hashes and a deterministic visible/hidden split.
 
 ## Objective evaluation
 
@@ -44,6 +44,17 @@ Mock outputs are stored only under `results/validation/` and are explicitly **so
 
 ## Real EXP-001 commands
 
+Prepare and validate the frozen inputs first:
+
+```bash
+python scripts/materialize_exp001_benchmark.py \
+  --manifest benchmarks/manifests/exp001_v1.json \
+  --output benchmarks/programming/exp001_v1/tasks.jsonl
+python scripts/validate_readiness.py
+```
+
+Only after the preparation gate has passed should the real experiment command be used:
+
 ```bash
 python scripts/validate_experiment.py --config configs/experiments/exp001_fixed_budget.yaml
 python scripts/run_experiment.py --config configs/experiments/exp001_fixed_budget.yaml
@@ -62,4 +73,4 @@ Every real run captures git SHA, configuration hash, benchmark hash/version, see
 
 ## Current Readiness
 
-**READY WITH CONDITIONS for a real EXP-001 execution.** The software framework is methodologically guarded, but the 5-task pilot benchmark must be replaced or expanded and the exact real model pool must be frozen before experimental conclusions are admissible.
+**READY FOR EXECUTION.** EXP-001 is now locked to a 100-task benchmark manifest, exact dated model snapshots, an immutable Docker image digest, paired seeds `[42, 43, 44]`, explicit strategy model pools, and hard preflight validation. No real EXP-001 inference has been executed during preparation.

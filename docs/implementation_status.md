@@ -25,13 +25,17 @@ The mock smoke path currently produces 35 task/strategy rows (5 tasks × 7 strat
 - No Docker sandbox run has been executed in the audit environment because Docker is unavailable there.
 - No empirical conclusion about strategy quality has been made.
 
-## Research limitations still present
+## Pre-execution blockers resolved
 
-1. The transparent benchmark contains only 5 tasks, which is too small for a substantive research claim or stable statistical conclusion.
-2. Real model selection must be frozen, documented, and run on the same task-seed pairs before interpretation.
-3. The Docker image should be pinned by digest for publication-grade replication.
-4. Provider-specific token accounting is only as reliable as each provider's usage metadata; missing usage must make a run ineligible rather than silently impute it.
+1. The 5-task smoke benchmark is now explicitly validation-only; EXP-001 is locked to a 100-task HumanEval-derived manifest.
+2. The real model pool is frozen to exact dated OpenAI snapshots with model-specific generation parameters.
+3. The Docker image is pinned to an immutable SHA-256 digest and strict sandbox policy.
+4. The seed schedule `[42, 43, 44]` is frozen and paired across every task.
+
+## Remaining operational preflight
+
+The pinned benchmark must be materialized from the official source at execution time when the derived JSONL artifact is absent. Materialization verifies the upstream archive hash and every manifest task/test hash before EXP-001 can proceed. No model inference is part of materialization.
 
 ## Next experiment
 
-The natural next step is to replace the 5-task pilot with a sufficiently large, version-pinned programming benchmark while preserving the same visible/hidden protocol, then execute the pre-registered C0-C6 EXP-001 across all configured seeds.
+After the preflight passes, execute the preregistered C0-C6 EXP-001 across all configured seeds. Interpret only real, stored, integrity-validated results.
