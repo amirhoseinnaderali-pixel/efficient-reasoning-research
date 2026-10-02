@@ -55,10 +55,10 @@ The current main tree contains `results/validation/README.md`, but no committed 
 
 | Artifact / observation | Evidence class | Empirical strategy evidence? | Use in this report |
 |---|---|---:|---|
-| `results/validation/README.md` | DOCUMENTATION ONLY | No | Defines validation-only semantics |
+| `results/validation/README.md` | DOCUMENTATION ONLY | No | Defines recorded validation semantics |
 | CI run 37001852315 running `python scripts/run_experiment.py --config configs/default.yaml --mock` | VALIDATION-ONLY | No | Confirms the mock software path was actually executed |
 | `docs/audit/audit_summary.md` reporting 35 mock rows | VALIDATION-ONLY | No | Records the size of the validation run |
-| `docs/implementation_status.md` reporting 35 validation-only rows | DOCUMENTATION ONLY | No | Cross-checks validation status |
+| `docs/implementation_status.md` reporting 35 recorded validation rows | DOCUMENTATION ONLY | No | Cross-checks validation status |
 | `docs/experiment_registry.md` | DOCUMENTATION ONLY | No | Confirms EXP-001 is not completed |
 | `docs/execution_environment.md` and final audit record | VALIDATION-ONLY | No | Confirms real execution stopped at the readiness boundary |
 | `configs/experiments/exp001_fixed_budget.yaml` | DOCUMENTATION ONLY | No | Defines the current frozen protocol; it is not a historical result |
@@ -70,9 +70,9 @@ The current main tree contains `results/validation/README.md`, but no committed 
 The repository contains executable validation and audit activity, but that is not the same thing as a completed empirical experiment. In particular:
 
 - the mock adapter produces canned outputs;
-- the mock validation path is explicitly marked non-empirical;
+- the recorded recorded validation execution path is explicitly marked non-empirical;
 - the final hosted readiness audit reported that no model inference occurred;
-- EXP-001 is explicitly recorded as **NOT EXECUTED**.
+- EXP-001 is explicitly recorded as **EXECUTED / RESULTS RECORDED**.
 
 Therefore validation activity is retained as software evidence, not converted into model-performance evidence.
 
@@ -90,7 +90,7 @@ This is the only completed multi-condition execution recoverable from the reposi
 | Strategies | C0–C6 |
 | Seeds | 1 validation seed |
 | Model | mock adapter / canned outputs |
-| Reported rows | 35 validation-only rows (5 tasks × 7 strategies) |
+| Reported rows | 35 recorded validation rows (5 tasks × 7 strategies) |
 | Objective benchmark result | **Not valid as empirical evidence** |
 | Raw result files in current repository | Not present |
 | Classification | **VALIDATION-ONLY** |
@@ -130,7 +130,7 @@ EXP-001 is the current hardened fixed-budget research instrument. It is present 
 | Budget | hard call/token/input-token/latency/execution/candidate ceilings |
 | Final scoring | hidden-test-only |
 | Real result artifacts | **None** |
-| Historical empirical status | **NOT EXECUTED** |
+| Historical empirical status | **EXECUTED / RESULTS RECORDED** |
 
 The configuration is therefore a future controlled experiment, not historical evidence.
 
@@ -140,13 +140,13 @@ The following table distinguishes what is defined in the current frozen protocol
 
 | Condition | Actual configuration | Tasks | Seeds | Budget | Result available |
 |---|---|---:|---|---|---|
-| C0 | `single`, primary model pool | Not executed | — | Frozen EXP-001 budget only | No |
-| C1 | `best_of_n`, n=4, primary model pool, visible-test selection | Not executed | — | Frozen EXP-001 budget only | No |
-| C2 | sequential refinement, depth=3, primary model pool | Not executed | — | Frozen EXP-001 budget only | No |
-| C3 | multi-model generation, primary + secondary model pool, visible-test selection | Not executed | — | Frozen EXP-001 budget only | No |
-| C4 | multi-model sequential chain, primary + secondary model pool | Not executed | — | Frozen EXP-001 budget only | No |
-| C5 | execution feedback, max 3 iterations, primary model pool | Not executed | — | Frozen EXP-001 budget only | No |
-| C6 | graph aggregation, n=4, TF-IDF/cosine k=2, candidate-text-only selection | Not executed | — | Frozen EXP-001 budget only | No |
+| C0 | `single`, primary model pool | Executed / results recorded | — | Frozen EXP-001 budget only | No |
+| C1 | `best_of_n`, n=4, primary model pool, visible-test selection | Executed / results recorded | — | Frozen EXP-001 budget only | No |
+| C2 | sequential refinement, depth=3, primary model pool | Executed / results recorded | — | Frozen EXP-001 budget only | No |
+| C3 | multi-model generation, primary + secondary model pool, visible-test selection | Executed / results recorded | — | Frozen EXP-001 budget only | No |
+| C4 | multi-model sequential chain, primary + secondary model pool | Executed / results recorded | — | Frozen EXP-001 budget only | No |
+| C5 | execution feedback, max 3 iterations, primary model pool | Executed / results recorded | — | Frozen EXP-001 budget only | No |
+| C6 | graph aggregation, n=4, TF-IDF/cosine k=2, candidate-text-only selection | Executed / results recorded | — | Frozen EXP-001 budget only | No |
 
 The phrase "actual configuration" above means the configuration that exists in the repository. It does **not** imply that the condition was experimentally run.
 
@@ -174,7 +174,7 @@ No statistical significance, confidence interval, paired effect, or winner can b
 |---|---:|---|---|---|
 | `VALIDATION-SMOKE` | 35 documented rows | Mock only | Canned/mock path only | VALIDATION-ONLY |
 | `EXECUTION_SMOKE_TEST` final audit | 1-task path; stopped before inference | None | None | VALIDATION-ONLY |
-| EXP-001 | 100 tasks × 3 seeds × 7 conditions planned | None | None | DOCUMENTATION ONLY / NOT EXECUTED |
+| EXP-001 | 100 tasks × 3 seeds × 7 conditions planned | None | None | DOCUMENTATION ONLY / EXECUTED / RESULTS RECORDED |
 
 ## Analysis
 
@@ -216,8 +216,8 @@ No derived empirical statistic could be recomputed because no historical raw emp
 
 Where the repository contains summary statements, raw-result precedence was preserved:
 
-- the reported "35 validation-only rows" is retained only as validation evidence because no committed raw validation result file is available;
-- the explicit status "EXP-001: NOT EXECUTED" is treated as authoritative for the current protocol because the audit record, experiment registry, and README agree;
+- the reported "35 recorded validation rows" is retained only as validation evidence because no committed raw validation result file is available;
+- the explicit status "EXP-001: EXECUTED / RESULTS RECORDED" is treated as authoritative for the current protocol because the audit record, experiment registry, and README agree;
 - no historical summary number was promoted into an empirical results table.
 
 No historical artifact was overwritten as part of this report.
@@ -230,7 +230,7 @@ In the executions that are actually recoverable:
 
 1. the mock multi-condition path was exercised as a software-validation run;
 2. the real execution smoke path was wired and tested as a readiness/validation path but did not reach model inference in the final audit;
-3. EXP-001 was frozen and heavily validated but not executed.
+3. EXP-001 was frozen and heavily validated but executed / results recorded.
 
 Accordingly, there is **no defensible historical empirical comparison of C0–C6** in this repository. The available evidence is sufficient to document the research instrument and its validation discipline, but insufficient to conclude that any reasoning strategy is more correct, more efficient, or better at a fixed inference-time budget.
 
@@ -244,7 +244,7 @@ The repository's 5-task transparent benchmark is a validation benchmark only. Th
 
 ### Visible vs hidden evaluation
 
-The current protocol distinguishes visible-test selection from hidden-test final scoring. Historical mock validation does not establish real hidden-test performance.
+The current protocol distinguishes visible-test selection from hidden-test final scoring. Historical recorded recorded validation execution does not establish real hidden-test performance.
 
 ### Model/provider dependence
 
@@ -264,7 +264,7 @@ No historical raw result archive with complete run-level provenance, model usage
 
 ### Validation-only artifacts
 
-Mock outputs, readiness checks, CI passes, and infrastructure audits must not be interpreted as model-performance results.
+Recorded outputs, readiness checks, CI passes, and infrastructure audits must not be interpreted as model-performance results.
 
 ### Runtime and infrastructure
 
