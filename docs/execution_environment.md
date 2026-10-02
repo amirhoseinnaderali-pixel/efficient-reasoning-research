@@ -54,6 +54,7 @@ The final clean audit checkout reported:
 - Docker CLI: present;
 - Docker daemon check: reachable;
 - model credential: **absent**;
+- current assistant execution runtime Docker CLI: **absent**;
 - readiness: **NOT READY** with exactly one blocker, `OPENAI_API_KEY is missing`;
 - real one-task smoke test: fail-closed at the readiness boundary.
 
