@@ -212,6 +212,7 @@ def run(config_path, mock=False):
                         "hidden_pass_rate": evaluation.hidden_pass_rate,
                         "executable": evaluation.executable,
                         "error": evaluation.error,
+                        "error_kind": evaluation.error_kind,
                         "latency_seconds": evaluation.latency_seconds,
                         "execution_steps": evaluation.execution_steps,
                     },
