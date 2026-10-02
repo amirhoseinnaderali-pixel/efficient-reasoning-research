@@ -14,7 +14,7 @@ from ..benchmarks.loader import benchmark_sha256, load_tasks
 from ..benchmarks.manifest import validate_manifest_path
 from .readiness import validate_materialized_benchmark
 from ..budgeting.budget import Budget, BudgetExceeded
-from ..evaluation.evaluator import ObjectiveEvaluator, VisibleEvaluator
+from ..evaluation.evaluator import InfrastructureExecutionError, ObjectiveEvaluator, VisibleEvaluator
 from ..logging.schema import validate_result
 from ..models.adapters import GoogleAdapter, MockAdapter, OllamaAdapter, OpenAICompatibleAdapter
 from ..strategies.factory import build_strategy
@@ -163,6 +163,9 @@ def run(config_path, mock=False):
                 except BudgetExceeded as exc:
                     status = "ineligible_budget"
                     error = f"BudgetExceeded: {exc}"
+                except InfrastructureExecutionError as exc:
+                    status = "failed"
+                    error = f"infrastructure_execution_failure: {exc}"
                 except Exception as exc:
                     status = "failed"
                     error = f"{type(exc).__name__}: {exc}"
