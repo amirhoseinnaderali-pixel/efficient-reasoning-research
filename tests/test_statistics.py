@@ -34,7 +34,17 @@ def test_analysis_rejects_duplicate_task_seed_strategy(tmp_path):
             "cost_proxy_status": "available",
             "execution_steps": 1, "candidate_count": 1, "budget_violated": False, "violation_reason": None,
         },
-        "metrics": {"hidden_pass_rate": 1.0}, "environment": {}, "status": "completed",
+        "metrics": {"hidden_pass_rate": 1.0},
+        "environment": {
+            "git_sha": "a" * 40,
+            "config_sha256": "b" * 64,
+            "benchmark_sha256": "x",
+            "python": "3.12",
+            "platform": "test",
+            "model_config": {"m": {"model_id": "m"}},
+            "execution": {"backend": "docker"},
+        },
+        "status": "completed",
         "error": None, "evaluation": {"hidden_pass_rate": 1.0}, "candidates": [], "trace": [], "notes": {},
     }
     path = tmp_path / "results.jsonl"
