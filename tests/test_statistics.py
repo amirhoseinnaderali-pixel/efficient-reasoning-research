@@ -31,6 +31,7 @@ def test_analysis_rejects_duplicate_task_seed_strategy(tmp_path):
             "model_calls": 1, "failed_model_calls": 0, "retries": 0, "input_tokens": 1, "output_tokens": 1,
             "total_generated_tokens": 1, "model_latency_seconds": 1.0, "execution_latency_seconds": 1.0,
             "graph_latency_seconds": 0.0, "strategy_wall_clock_seconds": 2.0, "cost_proxy": 0.0,
+            "cost_proxy_status": "available",
             "execution_steps": 1, "candidate_count": 1, "budget_violated": False, "violation_reason": None,
         },
         "metrics": {"hidden_pass_rate": 1.0}, "environment": {}, "status": "completed",
