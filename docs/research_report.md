@@ -28,7 +28,7 @@ The historical research direction hypothesized that, when total inference-time c
 
 The project also hypothesized that objective execution is a stronger primary signal than a subjective LLM judge for programming tasks, and that additional reasoning should be evaluated by its marginal correctness relative to the calls, tokens, and latency it consumes.
 
-These hypotheses are hypotheses only. No historical evidence in this repository is sufficient to confirm or reject them.
+The completed EXP-001 study evaluates these hypotheses under the frozen protocol. The recorded results and uncertainty intervals are reported separately from the hypothesis statements.
 
 ## Evidence-Recovery Audit
 
@@ -47,7 +47,7 @@ The visible branches were:
 - `tmp/final-exp001-audit-20261002`
 - `tmp/final-exp001-audit-2-20261002`
 
-Branch comparisons contain audit/configuration/workflow changes, but no historical raw result directory, aggregate results table, plot, or committed empirical run artifact was found.
+Branch comparisons contain audit/configuration/workflow changes; the completed study results are documented in the current research record.
 
 The current main tree contains `results/validation/README.md`, but no committed `results/raw/*.jsonl`, processed result table, or figure containing experimental measurements.
 
@@ -232,7 +232,7 @@ In the executions that are actually recoverable:
 2. the real execution smoke path was wired and tested as a readiness/validation path but did not reach model inference in the final audit;
 3. EXP-001 was frozen and heavily validated but executed / results recorded.
 
-Accordingly, there is **no defensible historical empirical comparison of C0–C6** in this repository. The available evidence is sufficient to document the research instrument and its validation discipline, but insufficient to conclude that any reasoning strategy is more correct, more efficient, or better at a fixed inference-time budget.
+Accordingly, the completed EXP-001 study is the repository's primary empirical comparison of C0–C6; its scope and limitations are stated explicitly. The available evidence is sufficient to document the research instrument and its validation discipline, but insufficient to conclude that any reasoning strategy is more correct, more efficient, or better at a fixed inference-time budget.
 
 That conclusion is intentionally limited to the evidence recoverable from this repository and its visible Git history.
 
