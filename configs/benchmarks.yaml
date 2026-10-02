@@ -1,0 +1,6 @@
+benchmarks:
+  transparent-python-mini-v1:
+    path: benchmarks/programming/tasks.jsonl
+    task_type: function_generation
+    version: 1
+    provenance: "Repository-owned transparent benchmark; deterministic tests; no external labels modified."

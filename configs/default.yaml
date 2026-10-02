@@ -1,0 +1,48 @@
+project:
+  name: efficient-reasoning-research
+  seed: 42
+
+benchmark:
+  name: transparent-python-mini-v1
+  tasks_path: benchmarks/programming/tasks.jsonl
+
+budget:
+  max_model_calls: 8
+  max_generated_tokens: 4000
+  max_latency_seconds: 180
+  max_execution_steps: 12
+  max_candidates: 8
+
+execution:
+  backend: mock
+  timeout_seconds: 3
+  memory_mb: 256
+  cpus: 1.0
+  network: none
+  image: python:3.12-slim
+
+strategies:
+  c0_single:
+    type: single
+  c1_best_of_n:
+    type: best_of_n
+    n: 4
+  c2_sequential_refinement:
+    type: sequential_refinement
+    depth: 3
+  c3_multi_model:
+    type: multi_model
+  c4_multi_model_chain:
+    type: multi_model_chain
+  c5_execution_feedback:
+    type: execution_feedback
+    max_iterations: 3
+  c6_graph_aggregation:
+    type: graph_aggregation
+    n: 4
+    graph:
+      method: tfidf
+      k: 2
+
+runner:
+  output_dir: results/raw

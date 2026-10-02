@@ -1,0 +1,23 @@
+models:
+  mock:
+    adapter: mock
+    name: mock-coder
+  local_ollama:
+    adapter: ollama
+    name: llama3.2:1b
+    base_url: http://localhost:11434
+  openai_compatible:
+    adapter: openai_compatible
+    name: gpt-4.1-mini
+    base_url: https://api.openai.com/v1
+  google:
+    adapter: google
+    name: gemini-2.5-flash
+
+active_models:
+  - mock
+
+multi_model_order:
+  - mock
+  - local_ollama
+  - openai_compatible
