@@ -1,0 +1,51 @@
+name: EXP001 Readiness Temporary
+
+on:
+  push:
+
+permissions:
+  contents: read
+
+jobs:
+  readiness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install validation dependencies
+        run: python -m pip install PyYAML pytest
+      - name: Complete test suite
+        run: PYTHONPATH=src python -m pytest -q
+      - name: Compile and frozen config validation
+        run: |
+          PYTHONPATH=src python -m compileall -q src scripts
+          PYTHONPATH=src python scripts/validate_experiment.py --config configs/experiments/exp001_fixed_budget.yaml
+      - name: Readiness
+        id: readiness
+        continue-on-error: true
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: PYTHONPATH=src python scripts/validate_readiness.py
+      - name: Execution environment
+        id: environment
+        continue-on-error: true
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: PYTHONPATH=src python scripts/validate_execution_environment.py
+      - name: Real smoke
+        id: smoke
+        continue-on-error: true
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: PYTHONPATH=src python scripts/run_execution_smoke_test.py
+      - name: Summary
+        if: always()
+        run: |
+          echo "READINESS_OUTCOME=${{ steps.readiness.outcome }}"
+          echo "ENVIRONMENT_OUTCOME=${{ steps.environment.outcome }}"
+          echo "SMOKE_OUTCOME=${{ steps.smoke.outcome }}"
+          echo "EXP001_EXECUTED=false"
