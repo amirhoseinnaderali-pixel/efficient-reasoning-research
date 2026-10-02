@@ -1,0 +1,107 @@
+name: EXP-001 Audit (temporary)
+
+on:
+  push:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+          pip check
+
+      - name: Materialize frozen EXP-001 benchmark
+        run: |
+          python scripts/materialize_exp001_benchmark.py \
+            --manifest benchmarks/manifests/exp001_v1.json \
+            --output benchmarks/programming/exp001_v1/tasks.jsonl
+
+      - name: Verify benchmark integrity
+        run: |
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          import sys
+          sys.path.insert(0, "src")
+          from efficient_reasoning.experiments.readiness import validate_frozen_manifest, validate_materialized_benchmark
+          from efficient_reasoning.benchmarks.loader import load_tasks
+
+          manifest_path = Path("benchmarks/manifests/exp001_v1.json")
+          tasks_path = Path("benchmarks/programming/exp001_v1/tasks.jsonl")
+          manifest = validate_frozen_manifest(manifest_path)
+          validate_materialized_benchmark(manifest, tasks_path)
+          tasks = load_tasks(tasks_path)
+
+          expected_ids = [x["task_id"] for x in manifest["tasks"]]
+          observed_ids = [x["id"] for x in tasks]
+          print("MANIFEST_TASK_COUNT:", manifest["task_count"])
+          print("MATERIALIZED_TASK_COUNT:", len(tasks))
+          print("TASK_ORDER_MATCH:", observed_ids == expected_ids)
+          print("SOURCE_COMMIT:", manifest["provenance"]["source_commit"])
+          print("SOURCE_ARCHIVE_SHA256:", manifest["provenance"]["source_archive_sha256"])
+          print("CANONICAL_SOURCE:", manifest["provenance"]["canonical_source"])
+          print("VISIBLE_ASSERTIONS_TOTAL:", sum(len(t["tests"]["visible"]["assertions"]) for t in tasks))
+          print("HIDDEN_ASSERTIONS_TOTAL:", sum(len(t["tests"]["hidden"]["assertions"]) for t in tasks))
+          print("MANIFEST_FILE_SHA256:", hashlib.sha256(manifest_path.read_bytes()).hexdigest())
+          print("MATERIALIZED_FILE_SHA256:", hashlib.sha256(tasks_path.read_bytes()).hexdigest())
+          print("FIRST_TASK_ID:", observed_ids[0])
+          print("LAST_TASK_ID:", observed_ids[-1])
+          PY
+
+      - name: Commit materialized benchmark locally
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add benchmarks/programming/exp001_v1/tasks.jsonl
+          git commit -m "data: materialize frozen EXP-001 benchmark"
+
+      - name: Readiness gate
+        id: readiness
+        continue-on-error: true
+        run: python scripts/validate_readiness.py
+
+      - name: Execution environment gate
+        id: execution_env
+        continue-on-error: true
+        run: python scripts/validate_execution_environment.py
+
+      - name: One-task isolated execution smoke test
+        id: smoke
+        continue-on-error: true
+        run: python scripts/run_execution_smoke_test.py
+
+      - name: Scientific pre-execution invariant tests
+        run: |
+          python -m pytest -q
+          python -m compileall -q src scripts
+          python scripts/validate_experiment.py --config configs/experiments/exp001_fixed_budget.yaml
+
+      - name: Final audit summary
+        if: always()
+        run: |
+          echo "READINESS_OUTCOME: ${{ steps.readiness.outcome }}"
+          echo "EXECUTION_ENV_OUTCOME: ${{ steps.execution_env.outcome }}"
+          echo "SMOKE_TEST_OUTCOME: ${{ steps.smoke.outcome }}"
+          echo "EXP001_EXECUTED: false"
+
+      - name: Remove temporary audit workflow and push final state
+        if: always()
+        run: |
+          git rm .github/workflows/exp001_audit.yml
+          git add -A
+          git commit -m "chore: remove temporary EXP-001 audit workflow"
+          git push origin HEAD:main
