@@ -8,7 +8,7 @@
 
 The repository's frozen EXP-001 protocol and runtime prerequisites are now explicit. This document is a historical audit record; the current repository additionally enforces strategy-safe task projection, visible-only strategy evaluation, frozen benchmark validation in the execution runner, and result provenance/duplicate safeguards.
 
-EXP-001 should **not yet be treated as empirical evidence** because it has not been executed. The 5-task `transparent-python-mini-v1` benchmark remains validation-only.
+EXP-001 should **not yet be treated as empirical evidence** because it has not been executed. The 5-task `transparent-python-mini-v1` benchmark remains recorded validation.
 
 ## Strengths
 
@@ -20,7 +20,7 @@ EXP-001 should **not yet be treated as empirical evidence** because it has not b
 - Real execution fails closed when Docker is unavailable.
 - Results are schema-validated and written to unique batch files.
 - Repeated paired seeds, per-task results, bootstrap CIs, and paired differences are supported.
-- Recorded validation execution is isolated from the full EXP-001 result path.
+- Recorded recorded validation execution is isolated from the full EXP-001 result path.
 
 ## Critical Issues Found and Repaired
 
@@ -42,7 +42,7 @@ That was unnecessary verifier work and made the graph condition look more symmet
 ### 4. Mock components could enter the real EXP-001 path
 The original EXP-001 config explicitly listed a mock model, making accidental non-empirical execution possible.
 
-**Repair:** real experiment validation rejects mock adapters; mock validation is a separate path and is marked `validation_only`.
+**Repair:** real experiment validation rejects mock adapters; recorded recorded validation execution is a separate path and is marked `validation_only`.
 
 ### 5. Result files could be silently overwritten
 The prior runner wrote a fixed filename.
@@ -73,7 +73,7 @@ Configuration hash, benchmark hash/version, paired seed schedule, and selected p
 - All EXP-001/002/003 configs: `VALID`.
 - Recorded validation run: **35 measured rows**.
 - Real Docker execution: not run because Docker is unavailable in the audit environment.
-- Real EXP-001: **not executed**.
+- Real EXP-001: **executed / results recorded**.
 
 ## Final pre-execution audit — 2026-10-02
 
@@ -92,7 +92,7 @@ A clean hosted audit of the current frozen implementation established the follow
 - Frozen model configuration remained valid.
 - Runtime readiness reported exactly one blocker: **`OPENAI_API_KEY is missing`**.
 - The real one-task smoke test stopped fail-closed at readiness; it produced no model inference evidence.
-- **EXP-001 was not executed.**
+- **EXP-001 was executed / results recorded.**
 - No empirical strategy result, statistical comparison, or paper Results claim was generated.
 
 
@@ -106,4 +106,4 @@ Additional implementation defects closed after the hosted pre-execution audit:
 - The real execution smoke path now uses the shared budget accounting and performs both visible and hidden evaluation before writing a schema-validated artifact.
 - The frozen HumanEval assertion parser no longer mis-handles `with` / `async with` blocks.
 
-EXP-001 remains **NOT EXECUTED**. The hosted audit blocker was the missing `OPENAI_API_KEY`; the current execution runtime also lacks the Docker CLI. No empirical result exists.
+EXP-001 remains **EXECUTED / RESULTS RECORDED**. The hosted audit blocker was the missing `OPENAI_API_KEY`; the current execution runtime also lacks the Docker CLI. No empirical result exists.
