@@ -81,6 +81,8 @@ def _validate_check_structure(test_source: str) -> ast.FunctionDef:
         for node in statements:
             if isinstance(node, ast.Assert):
                 continue
+            if isinstance(node, (ast.Import, ast.ImportFrom)):
+                continue
             if isinstance(node, (ast.Pass, ast.Return)):
                 continue
             if isinstance(node, ast.Expr):
@@ -177,15 +179,6 @@ def split_assertions(test_source: str) -> tuple[list[str], list[str], int]:
     visible = blocks[:cut]
     hidden = blocks[cut:]
     return visible, hidden, len(blocks)
-
-def split_assertions(test_source: str) -> tuple[list[str], list[str], int]:
-    asserts = _top_level_asserts(test_source)
-    if len(asserts) < 2:
-        raise ValueError("Each EXP-001 task must have at least two top-level assertions")
-    cut = (len(asserts) + 1) // 2
-    visible = [ast.unparse(n) for n in asserts[:cut]]
-    hidden = [ast.unparse(n) for n in asserts[cut:]]
-    return visible, hidden, len(asserts)
 
 
 def _module_setup(test_source: str) -> str:
