@@ -41,7 +41,7 @@ After the environment gate passes:
 python scripts/run_execution_smoke_test.py
 ```
 
-The smoke test is explicitly labeled `EXECUTION_SMOKE_TEST`, uses exactly one task, one C0-style generation, one seed, the real configured model, and the real Docker executor. It uses the visible test suite only and writes artifacts under `results/execution_smoke_test/`.
+The smoke test is explicitly labeled `EXECUTION_SMOKE_TEST`, uses exactly one task, one C0-style generation, one seed, the real configured model, the real Docker executor, shared budget accounting, and both visible and hidden evaluation. It writes a schema-validated artifact under `results/execution_smoke_test/`.
 
 **The smoke test is not EXP-001. Its output is not included in EXP-001 statistics or evidence.**
 

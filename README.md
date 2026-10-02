@@ -20,7 +20,7 @@ This is an empirical question. No strategy is assumed to be superior before cont
 
 ## EXP-001 status
 
-**IMPLEMENTED — NOT EXECUTED.**
+**IMPLEMENTED / SCIENTIFICALLY READY / NOT EXECUTED — BLOCKED BY `OPENAI_API_KEY`**
 
 The framework now enforces explicit call/token/time/execution/candidate budgets, separates visible selection from hidden final scoring, blocks mock adapters from real experiment configs, validates result schemas, and records reproducibility metadata.
 
@@ -82,6 +82,6 @@ python scripts/validate_readiness.py
 python scripts/validate_execution_environment.py
 ```
 
-Both commands fail closed when a real prerequisite is missing. The one-task `EXECUTION_SMOKE_TEST` is a separate execution-path check; it is not EXP-001.
+Both commands fail closed when a real prerequisite is missing. The one-task `EXECUTION_SMOKE_TEST` is a separate execution-path check; it uses the real model adapter, Docker executor, budget accounting, visible evaluation, and hidden evaluation; it is not EXP-001.
 
 **EXP-001: NOT EXECUTED.** No empirical result is claimed.
