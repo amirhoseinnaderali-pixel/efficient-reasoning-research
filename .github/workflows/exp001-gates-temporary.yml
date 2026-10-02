@@ -19,6 +19,26 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Diagnose pinned HumanEval/72
+        run: |
+          PYTHONPATH=src python - <<'PY'
+          import gzip, hashlib, json, urllib.request
+          from efficient_reasoning.benchmarks.exp001 import canonical_task_hash, test_source_hash
+          m=json.load(open('benchmarks/manifests/exp001_v1.json'))
+          p=m['provenance']; expected=next(x for x in m['tasks'] if x['task_id']=='HumanEval/72')
+          url=f"https://raw.githubusercontent.com/openai/human-eval/{p['source_commit']}/{p['source_path']}"
+          req=urllib.request.Request(url,headers={'User-Agent':'efficient-reasoning-research/1.0'})
+          archive=urllib.request.urlopen(req,timeout=30).read()
+          row=next(json.loads(x) for x in gzip.decompress(archive).decode().splitlines() if json.loads(x)['task_id']=='HumanEval/72')
+          print('EXPECTED_TASK_SHA256:',expected['task_sha256'])
+          print('EXPECTED_TEST_SHA256:',expected['test_sha256'])
+          print('ACTUAL_TASK_SHA256:',canonical_task_hash(row))
+          print('ACTUAL_TEST_SHA256:',test_source_hash(row['test']))
+          print('ENTRY_POINT:',row['entry_point'])
+          print('PROMPT_REPR:',repr(row['prompt']))
+          print('TEST_REPR:',repr(row['test']))
+          print('ARCHIVE_SHA256:',hashlib.sha256(archive).hexdigest())
+          PY
       - name: Materialize frozen EXP-001 benchmark
         id: materialize
         continue-on-error: true
