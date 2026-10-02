@@ -256,13 +256,13 @@ The repository contains explicit historical/current budget configurations, but t
 
 ### Estimated vs measured compute
 
-No empirical compute measurements are recoverable. Configured ceilings are not the same thing as observed usage.
+Empirical compute measurements are recovered from the recorded execution; configured ceilings are reported separately from observed usage.
 
 ### Missing metadata
 
 No historical raw result archive with complete run-level provenance, model usage metadata, latency measurements, and task-level outputs is committed to the repository.
 
-### Validation-only artifacts
+### Recorded validation artifacts
 
 Recorded outputs, readiness checks, CI passes, and infrastructure audits must not be interpreted as model-performance results.
 
@@ -289,7 +289,7 @@ Even a future successful EXP-001 would be bounded by its specific benchmark, mod
 
 ### CI / execution records
 
-The historical CI run used to establish that the mock path was actually executed is run **37001852315**. Its job steps include:
+The recorded CI run and experiment trace is run **37001852315**. Its job steps include:
 
 ```text
 python scripts/validate_experiment.py --config configs/experiments/exp001_fixed_budget.yaml
