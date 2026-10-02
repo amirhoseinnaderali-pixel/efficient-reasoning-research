@@ -98,9 +98,11 @@ def _validate_check_structure(test_source: str) -> ast.FunctionDef:
                     f"Unsupported executable setup in check(candidate): {ast.unparse(node)}"
                 )
             if isinstance(node, (ast.For, ast.AsyncFor, ast.If, ast.While, ast.With, ast.AsyncWith, ast.Try)):
-                if isinstance(node, (ast.For, ast.AsyncFor, ast.While, ast.With, ast.AsyncWith)):
+                if isinstance(node, (ast.For, ast.AsyncFor, ast.While)):
                     validate_statements(node.body)
                     validate_statements(node.orelse)
+                elif isinstance(node, (ast.With, ast.AsyncWith)):
+                    validate_statements(node.body)
                 elif isinstance(node, ast.If):
                     validate_statements(node.body)
                     validate_statements(node.orelse)
