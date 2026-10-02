@@ -201,7 +201,7 @@ def run(config_path, mock=False):
                     "task_id": task["id"],
                     "budget": snap,
                     "metrics": metrics,
-                    "status": status if not mock else "validation_only",
+                    "status": "validation_only" if mock and status == "completed" else status,
                     "error": error,
                     "evaluation": None if evaluation is None else {
                         "hidden_passed": evaluation.hidden_passed,
