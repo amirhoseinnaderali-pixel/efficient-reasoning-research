@@ -71,6 +71,7 @@ class TaskEvaluation:
     error: str | None
     latency_seconds: float
     execution_steps: int
+    error_kind: str | None = None
 
     @property
     def hidden_pass_rate(self) -> float:
