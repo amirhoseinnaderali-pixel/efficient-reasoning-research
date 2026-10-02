@@ -38,7 +38,7 @@ The frozen 100-task benchmark is now materialized at `benchmarks/programming/exp
 
 ## Remaining operational preflight
 
-The repository is benchmark-ready and configuration-valid. The remaining real-execution blocker is the absent `OPENAI_API_KEY`. The execution smoke path is wired through the real model, Docker, budget, visible-evaluation, hidden-evaluation, and result-schema paths.
+The repository is benchmark-ready and configuration-valid. The execution smoke path is wired through the real model, Docker, budget, visible-evaluation, hidden-evaluation, and result-schema paths. The current execution runtime is blocked by the absent `OPENAI_API_KEY` and missing Docker CLI.
 
 ## Next experiment
 
