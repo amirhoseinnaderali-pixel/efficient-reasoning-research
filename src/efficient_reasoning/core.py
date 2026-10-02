@@ -49,7 +49,8 @@ class BudgetSnapshot:
     execution_latency_seconds: float
     graph_latency_seconds: float
     strategy_wall_clock_seconds: float
-    cost_proxy: float
+    cost_proxy: float | None
+    cost_proxy_status: str
     execution_steps: int
     candidate_count: int
     budget_violated: bool

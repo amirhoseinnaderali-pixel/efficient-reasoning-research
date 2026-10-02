@@ -6,12 +6,10 @@ import json
 from collections import defaultdict
 from pathlib import Path
 import sys
-
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 from efficient_reasoning.logging.schema import validate_result
 from efficient_reasoning.evaluation.statistics import bootstrap_ci, mean
-
 
 def load_rows(path: Path):
     files = [path] if path.is_file() else sorted(path.rglob("*.jsonl"))
@@ -32,14 +30,12 @@ def load_rows(path: Path):
                     rows.append(row)
     return rows
 
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument("--baseline", default="c0_single")
     args = parser.parse_args()
-
     rows = load_rows(Path(args.input))
     by_strategy = defaultdict(list)
     by_pair = {}
@@ -47,26 +43,31 @@ def main():
         rate = row["evaluation"]["hidden_pass_rate"]
         by_strategy[row["strategy"]].append(rate)
         by_pair[(row["seed"], row["task_id"], row["strategy"])] = rate
-
     report = {"n_completed_rows": len(rows), "strategies": {}, "paired_vs_baseline": {}}
-    for strategy, values in sorted(by_strategy.items()):
+    for strategy, group_rows in sorted(
+        ((strategy, [r for r in rows if r["strategy"] == strategy]) for strategy in set(by_strategy)),
+        key=lambda x: x[0],
+    ):
+        values = by_strategy[strategy]
+        available_costs = [
+            r["budget"]["cost_proxy"]
+            for r in group_rows
+            if r["budget"]["cost_proxy_status"] == "available"
+        ]
         report["strategies"][strategy] = {
             "n_rows": len(values),
             "mean_hidden_pass_rate": mean(values),
             "bootstrap_95_ci": bootstrap_ci(values),
+            "cost_proxy_available_rows": len(available_costs),
+            "mean_cost_proxy_if_complete": mean(available_costs) if len(available_costs) == len(group_rows) else None,
+            "cost_proxy_status": "available" if len(available_costs) == len(group_rows) else "unavailable_or_partial",
         }
-
-    baseline_pairs = {
-        (seed, task): value
-        for (seed, task, strategy), value in by_pair.items()
-        if strategy == args.baseline
-    }
+    baseline_pairs = {(seed, task): value for (seed, task, strategy), value in by_pair.items() if strategy == args.baseline}
     for strategy in sorted(by_strategy):
         if strategy == args.baseline:
             continue
         deltas = []
-        for key, value in by_pair.items():
-            seed, task, candidate_strategy = key
+        for (seed, task, candidate_strategy), value in by_pair.items():
             if candidate_strategy == strategy and (seed, task) in baseline_pairs:
                 deltas.append(value - baseline_pairs[(seed, task)])
         report["paired_vs_baseline"][strategy] = {
@@ -75,12 +76,11 @@ def main():
             "mean_delta_hidden_pass_rate": mean(deltas),
             "bootstrap_95_ci": bootstrap_ci(deltas, seed=5678) if deltas else None,
         }
-
     out = Path(args.output)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
+    out.write_text(json.dumps(report, indent=2, sort_keys=True) + "
+")
     print(out)
-
 
 if __name__ == "__main__":
     main()

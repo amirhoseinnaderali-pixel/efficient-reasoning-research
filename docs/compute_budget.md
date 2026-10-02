@@ -12,8 +12,7 @@ EXP-001 keeps compute dimensions separate rather than collapsing them into one s
 | Graph latency | `graph_latency_seconds` | tracked | C6 graph construction/selection time. |
 | Strategy wall clock | `strategy_wall_clock_seconds` | yes | Covers all work inside the strategy plus final evaluation. |
 | Execution steps | `execution_steps` | yes | Each visible/hidden sandbox invocation is one step. |
-| Candidates | `candidate_count` | yes | Every generated candidate counts. |
-| Cost proxy | `cost_proxy` | tracked | Only recorded when the adapter supplies a measurable proxy. |
+| Cost proxy | `cost_proxy` + `cost_proxy_status` | tracked | `available` means every recorded model call supplied a measurable monetary proxy; `unavailable` is preserved explicitly rather than encoded as zero. |
 
 ## Comparability rules
 
@@ -22,3 +21,5 @@ The same budget ceilings are applied independently to every task/seed/strategy r
 C1 and C3 are explicitly **verifier-assisted** conditions: visible tests may be used for candidate selection. C5 uses visible execution for iterative feedback. C6 graph selection is prohibited from using objective test results before selection.
 
 A run that crosses a hard budget is marked `ineligible_budget`; it must not be treated as a valid point on a correctness/compute frontier.
+
+A mixed or missing monetary cost proxy is never silently treated as zero. Cost-based analysis must use only rows with `cost_proxy_status=available` and must not be used when coverage is incomplete.

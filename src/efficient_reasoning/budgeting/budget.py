@@ -29,6 +29,7 @@ class Budget:
     execution_steps: int = 0
     candidate_count: int = 0
     cost_proxy: float = 0.0
+    cost_proxy_status: str = "available"
     violation_reason: str | None = None
     _started_at: float = 0.0
 
@@ -77,7 +78,10 @@ class Budget:
         self.input_tokens += max(0, int(result.input_tokens or 0))
         self.output_tokens += max(0, int(result.output_tokens or 0))
         self.model_latency_seconds += max(0.0, float(result.latency_seconds or 0.0))
-        self.cost_proxy += float(result.cost_proxy or 0.0)
+        if result.cost_proxy is None:
+            self.cost_proxy_status = "unavailable"
+        elif self.cost_proxy_status == "available":
+            self.cost_proxy += float(result.cost_proxy)
         if self.max_input_tokens is not None and self.input_tokens > self.max_input_tokens:
             self._violate("max_input_tokens exceeded")
         if self.output_tokens > self.max_generated_tokens:
@@ -120,7 +124,8 @@ class Budget:
             execution_latency_seconds=self.execution_latency_seconds,
             graph_latency_seconds=self.graph_latency_seconds,
             strategy_wall_clock_seconds=self.strategy_wall_clock_seconds,
-            cost_proxy=self.cost_proxy,
+            cost_proxy=self.cost_proxy if self.cost_proxy_status == "available" else None,
+            cost_proxy_status=self.cost_proxy_status,
             execution_steps=self.execution_steps,
             candidate_count=self.candidate_count,
             budget_violated=self.violation_reason is not None,
