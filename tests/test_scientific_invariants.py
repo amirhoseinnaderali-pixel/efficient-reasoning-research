@@ -1,7 +1,7 @@
 from efficient_reasoning.aggregation.graph import build_graph
 from efficient_reasoning.budgeting.budget import Budget, BudgetExceeded
 from efficient_reasoning.core import GenerationResult
-from efficient_reasoning.evaluation.evaluator import ObjectiveEvaluator
+from efficient_reasoning.evaluation.evaluator import ObjectiveEvaluator, VisibleEvaluator
 from efficient_reasoning.logging.schema import validate_result
 from efficient_reasoning.models.adapters import MockAdapter
 from efficient_reasoning.strategies.strategies import BestOfN, GraphAggregation
@@ -42,7 +42,8 @@ class RecordingAdapter(MockAdapter):
 def test_best_of_n_uses_visible_only_for_selection_and_hidden_is_never_called():
     executor = TrackingExecutor()
     budget = Budget(8, 200, 10, 12, 8)
-    evaluator = ObjectiveEvaluator(executor, budget)
+    evaluator = VisibleEvaluator(executor, budget)
+    final_evaluator = ObjectiveEvaluator(executor, budget)
     strategy = BestOfN(
         RecordingAdapter(task_id=TASK["id"]),
         budget,
@@ -54,14 +55,14 @@ def test_best_of_n_uses_visible_only_for_selection_and_hidden_is_never_called():
     result = strategy.solve(TASK)
     assert executor.suites == ["visible", "visible"]
     assert all(candidate.visible_total == 1 for candidate in result.candidates)
-    evaluator.evaluate_final(result.answer, TASK)
+    final_evaluator.evaluate_final(result.answer, TASK)
     assert executor.suites[-1] == "hidden"
 
 
 def test_graph_selection_does_not_call_objective_verifier():
     executor = TrackingExecutor()
     budget = Budget(8, 200, 10, 12, 8)
-    evaluator = ObjectiveEvaluator(executor, budget)
+    evaluator = VisibleEvaluator(executor, budget)
     strategy = GraphAggregation(
         MockAdapter(task_id=TASK["id"]),
         budget,

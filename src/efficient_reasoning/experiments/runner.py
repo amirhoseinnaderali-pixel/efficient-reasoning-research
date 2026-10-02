@@ -12,8 +12,9 @@ from pathlib import Path
 
 from ..benchmarks.loader import benchmark_sha256, load_tasks
 from ..benchmarks.manifest import validate_manifest_path
+from .readiness import validate_materialized_benchmark
 from ..budgeting.budget import Budget, BudgetExceeded
-from ..evaluation.evaluator import ObjectiveEvaluator
+from ..evaluation.evaluator import ObjectiveEvaluator, VisibleEvaluator
 from ..logging.schema import validate_result
 from ..models.adapters import GoogleAdapter, MockAdapter, OllamaAdapter, OpenAICompatibleAdapter
 from ..strategies.factory import build_strategy
@@ -72,12 +73,18 @@ def make_executor(cfg, mock=False):
         cpus=float(cfg["cpus"]),
         image=cfg["image"],
         platform=cfg.get("platform", "linux/amd64"),
+        pid_limit=int(cfg["pid_limit"]),
     )
 
 
 def _task_seed(base_seed: int, task_id: str) -> int:
     digest = hashlib.sha256(task_id.encode()).hexdigest()
     return base_seed + int(digest[:8], 16)
+
+
+def _strategy_task(task: dict) -> dict:
+    """Project the benchmark task to fields permitted inside strategy code."""
+    return {key: task[key] for key in ("id", "problem", "entry_point")}
 
 
 def _experiment_hash(cfg: dict) -> str:
@@ -100,9 +107,7 @@ def run(config_path, mock=False):
     manifest = None
     if cfg["runner"].get("require_materialized_benchmark"):
         manifest = validate_manifest_path(cfg["benchmark"]["manifest_path"])
-        tasks_path = Path(cfg["benchmark"]["tasks_path"])
-        if not tasks_path.exists():
-            raise RuntimeError("EXP-001 benchmark is not materialized; run scripts/materialize_exp001_benchmark.py before real execution")
+        validate_materialized_benchmark(manifest, cfg["benchmark"]["tasks_path"])
     tasks = load_tasks(cfg["benchmark"]["tasks_path"])
     if manifest is not None and len(tasks) != int(manifest["task_count"]):
         raise RuntimeError("Materialized benchmark task count does not match frozen manifest")
@@ -128,7 +133,8 @@ def run(config_path, mock=False):
             for strategy_name, strategy_cfg in cfg["strategies"].items():
                 budget = Budget(**cfg["budget"])
                 executor = make_executor(cfg["execution"], mock)
-                evaluator = ObjectiveEvaluator(executor, budget)
+                final_evaluator = ObjectiveEvaluator(executor, budget)
+                visible_evaluator = VisibleEvaluator(executor, budget)
                 adapter_cache = {name: make_adapter(spec, task["id"], mock) for name, spec in specs_by_name.items()}
                 default_pool = cfg["models"]
                 pool_names = strategy_cfg.get("model_pool", default_pool)
@@ -145,13 +151,14 @@ def run(config_path, mock=False):
                         strategy_cfg,
                         primary,
                         budget,
-                        evaluator,
+                        visible_evaluator,
                         adapters,
                         generation=cfg["generation"],
                         seed=strategy_seed,
                     )
-                    result = strategy.solve(task)
-                    evaluation = evaluator.evaluate_final(result.answer, task)
+                    strategy_task = _strategy_task(task)
+                    result = strategy.solve(strategy_task)
+                    evaluation = final_evaluator.evaluate_final(result.answer, task)
                     budget.check_wall_clock()
                 except BudgetExceeded as exc:
                     status = "ineligible_budget"
@@ -181,8 +188,9 @@ def run(config_path, mock=False):
                     "run_id": f"{batch_id}__seed{seed}__{task['id']}__{strategy_name}",
                     "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                     "strategy": strategy_name,
-                    "model": specs_by_name[strategy_cfg.get("model_pool", cfg["models"])[0]]["model_id"],
+                    "model": None if result is None else result.selected_model,
                     "model_pool": [specs_by_name[n]["model_id"] for n in strategy_cfg.get("model_pool", cfg["models"])],
+                    "selected_candidate_id": None if result is None else result.selected_candidate_id,
                     "generation_config": {
                         "global": cfg["generation"],
                         "model_specific": {n: specs_by_name[n].get("generation_config", {}) for n in strategy_cfg.get("model_pool", cfg["models"])},

@@ -20,6 +20,7 @@ args = parser.parse_args()
 root = Path(args.input)
 files = [root] if root.is_file() else sorted(root.rglob("*.jsonl"))
 rows = []
+seen = set()
 for file in files:
     if "validation" in file.parts:
         continue
@@ -27,6 +28,10 @@ for file in files:
         if line.strip():
             row = json.loads(line)
             validate_result(row)
+            key = (row["task_id"], row["seed"], row["strategy"])
+            if key in seen:
+                raise ValueError(f"Duplicate task-seed-strategy result: {key}")
+            seen.add(key)
             if row.get("status") == "completed":
                 rows.append(row)
 

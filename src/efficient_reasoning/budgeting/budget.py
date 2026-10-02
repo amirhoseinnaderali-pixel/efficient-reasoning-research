@@ -59,6 +59,14 @@ class Budget:
         if self.strategy_wall_clock_seconds > self.max_latency_seconds:
             self._violate("max_latency_seconds exceeded")
 
+    def ensure_candidate_available(self) -> None:
+        if self.candidate_count + 1 > self.max_candidates:
+            self._violate("max_candidates exceeded")
+
+    def ensure_execution_step_available(self) -> None:
+        if self.execution_steps + 1 > self.max_execution_steps:
+            self._violate("max_execution_steps exceeded")
+
     def reserve_call(self) -> None:
         self.check_wall_clock()
         if self.model_calls + 1 > self.max_model_calls:

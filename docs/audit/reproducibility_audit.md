@@ -15,4 +15,4 @@
 
 ## Remaining condition
 
-Before a publication-grade real run, pin and pre-pull the Docker image by digest and freeze the exact provider/model identifiers. The repository does not invent either value.
+The runtime environment must provide the already-frozen model identifiers, API credentials, Docker daemon, and materialized benchmark. Docker image availability is checked as an environment prerequisite; the repository does not claim that the image is pre-pulled.

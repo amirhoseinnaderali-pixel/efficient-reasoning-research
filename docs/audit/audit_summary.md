@@ -6,12 +6,9 @@
 
 **READY WITH CONDITIONS**
 
-The core experimental framework is now suitable to support a controlled EXP-001 execution: the major budget-accounting, verifier-leakage, fail-closed execution, result-schema, reproducibility, and test gaps identified in the audit were repaired inside `efficient-reasoning-research` only.
+The repository's frozen EXP-001 protocol and runtime prerequisites are now explicit. This document is a historical audit record; the current repository additionally enforces strategy-safe task projection, visible-only strategy evaluation, frozen benchmark validation in the execution runner, and result provenance/duplicate safeguards.
 
-EXP-001 should **not yet be treated as publication-grade evidence** for two remaining reasons:
-
-1. `transparent-python-mini-v1` contains only 5 tasks, which is insufficient for a stable research conclusion.
-2. The real model pool and Docker image digest must be frozen before execution.
+EXP-001 should **not yet be treated as empirical evidence** because it has not been executed. The 5-task `transparent-python-mini-v1` benchmark remains validation-only.
 
 ## Strengths
 
@@ -61,7 +58,7 @@ Configuration hash, benchmark hash/version, paired seed schedule, and selected p
 
 - The 5-task benchmark is too small for a substantive claim.
 - Cross-provider token counts are reported but are not assumed to represent identical computational work.
-- The current Docker image is configured by tag; a digest should be frozen before publication-grade execution.
+- The frozen Docker image digest and dated model IDs are configuration inputs; actual environment availability still has to be checked before execution.
 
 ## Minor Issues
 

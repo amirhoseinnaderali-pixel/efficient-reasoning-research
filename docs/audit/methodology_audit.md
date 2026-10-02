@@ -17,8 +17,8 @@ The conditions are not expected to consume identical computation. Instead, they 
 | C0 | 1 | 1 | 0 | 1 | 0 |
 | C1 | N=4 | 4 | 4 | 1 | 0 |
 | C2 | depth=3 | 3 | 0 | 1 | 0 |
-| C3 | one per configured model (3) | 3 | 3 | 1 | 0 |
-| C4 | one per configured model (3) | 3 | 0 | 1 | 0 |
+| C3 | one per configured model (2) | 2 | 2 | 1 | 0 |
+| C4 | one per configured model (2) | 2 | 0 | 1 | 0 |
 | C5 | up to 3 | up to 3 | up to 3 | 1 | 0 |
 | C6 | N=4 | 4 | 0 | 1 | measured |
 

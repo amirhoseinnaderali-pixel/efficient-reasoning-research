@@ -15,3 +15,21 @@ def test_exp001_uses_immutable_docker_digest():
     assert cfg["execution"]["network"] == "none"
     assert cfg["execution"]["platform"] == "linux/amd64"
     assert cfg["execution"]["sandbox_policy"] == "docker_strict_v1"
+
+
+def test_runner_passes_frozen_pid_limit_to_docker(monkeypatch):
+    import efficient_reasoning.experiments.runner as runner
+
+    seen = {}
+
+    class FakeDocker:
+        def __init__(self, **kwargs):
+            seen.update(kwargs)
+
+    monkeypatch.setattr(runner, "DockerExecutor", FakeDocker)
+    executor = runner.make_executor({
+        "backend": "docker", "timeout_seconds": 3, "memory_mb": 256, "cpus": 1.0,
+        "pid_limit": 37, "image": "python:3.12-slim-bookworm@sha256:" + "0" * 64, "platform": "linux/amd64",
+    })
+    assert isinstance(executor, FakeDocker)
+    assert seen["pid_limit"] == 37

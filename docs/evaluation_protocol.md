@@ -1,11 +1,11 @@
 # Evaluation Protocol
 
-1. Every strategy receives the same underlying task object and the same problem statement.
+1. Every strategy receives the same task ID, problem statement, and entry point through a strategy-safe task projection; benchmark test suites remain outside the strategy context.
 2. Generated candidates are parsed without altering benchmark labels or tests.
 3. Visible tests are an optional **strategy-side resource** only for C1/C3 selection and C5 feedback. They are never exposed to generation for C0/C2/C4/C6.
 4. C6 graph selection occurs before any objective test result is observed.
 5. Final objective scoring uses **only the hidden suite** through the common evaluator.
-6. Hidden labels are not passed to any strategy method.
+6. Hidden labels are not passed to any strategy method, and the strategy-side evaluator exposes only visible-test execution.
 7. Generated code executes only through the Docker sandbox for real experiments.
 8. Docker execution uses no network, bounded CPU/memory, a read-only root filesystem, isolated `/tmp`, dropped capabilities, no-new-privileges, a PID limit, and a timeout.
 9. If Docker is unavailable, the real execution path fails closed. The mock executor is validation-only.

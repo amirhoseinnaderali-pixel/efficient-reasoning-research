@@ -1,5 +1,5 @@
 from efficient_reasoning.budgeting.budget import Budget
-from efficient_reasoning.evaluation.evaluator import ObjectiveEvaluator
+from efficient_reasoning.evaluation.evaluator import ObjectiveEvaluator, VisibleEvaluator
 from efficient_reasoning.models.adapters import MockAdapter
 from efficient_reasoning.strategies.factory import build_strategy
 from efficient_reasoning.verification.sandbox import MockExecutor
@@ -26,14 +26,16 @@ def test_all_conditions_fit_the_common_contract_and_budget():
     }
     for name, cfg in specs.items():
         budget = Budget(8, 500, 30, 12, 8)
-        evaluator = ObjectiveEvaluator(MockExecutor(), budget)
+        evaluator = VisibleEvaluator(MockExecutor(), budget)
         adapters = [MockAdapter("mock-a", task_id=TASK["id"]), MockAdapter("mock-b", task_id=TASK["id"])]
         strategy = build_strategy(name, cfg, adapters[0], budget, evaluator, adapters, generation=GEN, seed=5)
         result = strategy.solve(TASK)
         assert result.strategy == name
         assert result.answer
+        assert result.selected_candidate_id in {candidate.candidate_id for candidate in result.candidates}
+        assert result.selected_model in {candidate.model for candidate in result.candidates}
         assert budget.model_calls <= 8
         assert budget.candidate_count <= 8
         assert budget.execution_steps <= 12
-        evaluator.evaluate_final(result.answer, TASK)
+        ObjectiveEvaluator(evaluator.executor, budget).evaluate_final(result.answer, TASK)
         assert budget.execution_steps <= 12

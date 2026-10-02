@@ -3,7 +3,7 @@ from __future__ import annotations
 import time
 from abc import ABC, abstractmethod
 
-from ..budgeting.budget import Budget
+from ..budgeting.budget import Budget, BudgetExceeded
 from ..core import GenerationResult, StrategyResult
 
 
@@ -21,17 +21,18 @@ class ReasoningStrategy(ABC):
         raise NotImplementedError
 
     def _generate(self, adapter, prompt: str, task_id: str, candidate_index: int = 0) -> GenerationResult:
-        self.budget.reserve_call()
-        adapter.config["task_id"] = task_id
+        self.budget.ensure_candidate_available()
         remaining = self.budget.remaining_generated_tokens
         if remaining <= 0:
-            raise RuntimeError("No generated-token budget remains")
+            raise BudgetExceeded("No generated-token budget remains")
         model_generation = adapter.config.get("generation_config", {})
         requested = int(self.generation.get("max_output_tokens_per_call", model_generation.get("max_tokens", remaining)))
         max_tokens = min(requested, remaining)
         remaining_latency = self.budget.remaining_latency_seconds
-        if remaining_latency <= 0:
-            raise RuntimeError("No wall-clock budget remains")
+        if remaining_latency < 0.1:
+            raise BudgetExceeded("Insufficient wall-clock budget remains for a model call")
+        self.budget.reserve_call()
+        adapter.config["task_id"] = task_id
         timeout_seconds = min(float(self.generation.get("timeout_seconds", 120.0)), remaining_latency)
         seed = self.seed + candidate_index
         started = time.perf_counter()

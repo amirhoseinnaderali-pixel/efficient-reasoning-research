@@ -16,6 +16,7 @@ from efficient_reasoning.evaluation.statistics import bootstrap_ci, mean
 def load_rows(path: Path):
     files = [path] if path.is_file() else sorted(path.rglob("*.jsonl"))
     rows = []
+    seen = set()
     for file in files:
         if "validation" in file.parts:
             continue
@@ -23,10 +24,13 @@ def load_rows(path: Path):
             if line.strip():
                 row = json.loads(line)
                 validate_result(row)
+                key = (row["task_id"], row["seed"], row["strategy"])
+                if key in seen:
+                    raise ValueError(f"Duplicate task-seed-strategy result: {key}")
+                seen.add(key)
                 if row.get("status") == "completed" and row.get("evaluation"):
                     rows.append(row)
     return rows
-
 
 
 def main():

@@ -5,6 +5,7 @@ import json
 import shutil
 import subprocess
 import time
+import uuid
 from dataclasses import dataclass
 
 
@@ -107,8 +108,9 @@ except Exception:
         effective_timeout = min(self.timeout_seconds, float(timeout_seconds)) if timeout_seconds is not None else self.timeout_seconds
         if effective_timeout <= 0:
             return ExecutionResult(0, self._suite_total(suite_data), "execution budget exhausted before sandbox launch", 0.0, 1)
+        container_name = f"efficient-reasoning-{uuid.uuid4().hex[:16]}"
         cmd = [
-            "docker", "run", "--rm", "--init", "--network", "none", "--platform", self.platform,
+            "docker", "run", "--rm", "--init", "--name", container_name, "--network", "none", "--platform", self.platform,
             "--cpus", str(self.cpus), "--memory", f"{self.memory_mb}m", "--pids-limit", str(self.pid_limit),
             "--read-only", "--tmpfs", "/tmp:rw,nosuid,nodev,noexec,size=64m",
             "--security-opt", "no-new-privileges", "--cap-drop", "ALL", "--security-opt", "seccomp=default",
@@ -119,6 +121,16 @@ except Exception:
         try:
             proc = subprocess.run(cmd, text=True, capture_output=True, timeout=effective_timeout)
         except subprocess.TimeoutExpired:
+            try:
+                subprocess.run(
+                    ["docker", "rm", "-f", container_name],
+                    text=True,
+                    capture_output=True,
+                    timeout=10,
+                    check=False,
+                )
+            except (OSError, subprocess.SubprocessError):
+                pass
             return ExecutionResult(0, self._suite_total(suite_data), "timeout", time.perf_counter() - started, 1)
         except OSError as exc:
             return ExecutionResult(0, self._suite_total(suite_data), f"sandbox launch failed: {exc}", time.perf_counter() - started, 1)

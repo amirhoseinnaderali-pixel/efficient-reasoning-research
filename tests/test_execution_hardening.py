@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from efficient_reasoning.experiments.execution_environment import check_docker, check_model_access
+from efficient_reasoning.evaluation.evaluator import VisibleEvaluator
 from efficient_reasoning.experiments.readiness import validate_materialized_benchmark
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -107,3 +108,28 @@ def test_environment_validator_does_not_print_secret_value():
     source = (ROOT / "src/efficient_reasoning/experiments/execution_environment.py").read_text()
     assert "print(os.getenv" not in source
     assert "OPENAI_API_KEY" in source
+
+
+def test_visible_evaluator_has_no_hidden_final_method():
+    evaluator = VisibleEvaluator(object(), object())
+    assert not hasattr(evaluator, "evaluate_hidden")
+    assert not hasattr(evaluator, "evaluate_final")
+
+
+def test_strategy_task_projection_excludes_tests():
+    from efficient_reasoning.experiments.runner import _strategy_task
+
+    task = {"id": "t1", "problem": "p", "entry_point": "f", "tests": {"visible": {}, "hidden": {}}}
+    assert _strategy_task(task) == {"id": "t1", "problem": "p", "entry_point": "f"}
+
+
+def test_result_schema_requires_provenance_fields():
+    from efficient_reasoning.logging.schema import validate_result
+
+    row = {
+        "experiment_id": "EXP-001", "run_id": "r", "timestamp": "t", "strategy": "c0_single",
+        "model": "m", "benchmark": {"name": "b", "version": "1", "sha256": "x"},
+        "seed": 42, "budget": {}, "metrics": {}, "environment": {}, "status": "completed",
+    }
+    with pytest.raises(ValueError, match="Result missing fields"):
+        validate_result(row)

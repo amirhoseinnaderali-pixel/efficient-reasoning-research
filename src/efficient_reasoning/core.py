@@ -33,6 +33,8 @@ class StrategyResult:
     candidates: list[Candidate] = field(default_factory=list)
     trace: list[dict[str, Any]] = field(default_factory=list)
     notes: dict[str, Any] = field(default_factory=dict)
+    selected_candidate_id: str | None = None
+    selected_model: str | None = None
 
 
 @dataclass

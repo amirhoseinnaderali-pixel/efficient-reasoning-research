@@ -22,7 +22,7 @@ def _tfidf(texts):
 
 
 def _cos(a, b):
-    keys = set(a) | set(b)
+    keys = sorted(set(a) | set(b))
     da = sum(a.get(k, 0.0) ** 2 for k in keys)
     db = sum(b.get(k, 0.0) ** 2 for k in keys)
     if da == 0 or db == 0:

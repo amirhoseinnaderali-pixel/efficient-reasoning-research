@@ -4,7 +4,7 @@
 
 ### Fixed
 
-- Hidden tests are accessed only by final evaluation.
+- Hidden tests are accessed only by final evaluation; the real runner projects tasks to a strategy-safe view and gives strategies a visible-only evaluator interface.
 - C6 no longer calls the verifier before graph selection.
 - Final scoring no longer reruns visible tests.
 - Mock validation cannot enter real EXP-001 configuration validation.
