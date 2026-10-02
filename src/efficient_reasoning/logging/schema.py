@@ -66,6 +66,23 @@ def validate_result(result: dict[str, Any]) -> None:
         raise ValueError("Result metrics must be an object")
     if not isinstance(result["benchmark"], dict) or not result["benchmark"].get("name") or not result["benchmark"].get("version") or not result["benchmark"].get("sha256"):
         raise ValueError("Result benchmark provenance is incomplete")
+    if not isinstance(result["seed"], int):
+        raise ValueError("Result seed must be an integer")
+    environment = result["environment"]
+    if not isinstance(environment, dict):
+        raise ValueError("Result environment must be an object")
+    for field in ("git_sha", "config_sha256", "benchmark_sha256", "python", "platform", "model_config", "execution"):
+        if field not in environment:
+            raise ValueError(f"Result environment provenance is missing: {field}")
+    for field in ("git_sha", "config_sha256", "benchmark_sha256", "python", "platform"):
+        if not isinstance(environment[field], str) or not environment[field]:
+            raise ValueError(f"Result environment field must be a non-empty string: {field}")
+    if environment["benchmark_sha256"] != result["benchmark"]["sha256"]:
+        raise ValueError("Result benchmark SHA-256 does not match environment provenance")
+    if not isinstance(environment["model_config"], dict) or not environment["model_config"]:
+        raise ValueError("Result model metadata is missing")
+    if not isinstance(environment["execution"], dict) or not environment["execution"]:
+        raise ValueError("Result execution environment metadata is missing")
     if not isinstance(result["model_pool"], list) or not result["model_pool"]:
         raise ValueError("Result model_pool must be a non-empty list")
     if not isinstance(result["generation_config"], dict):
