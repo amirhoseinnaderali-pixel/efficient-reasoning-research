@@ -132,7 +132,7 @@ EXP-001 is the current hardened fixed-budget research instrument. It is present 
 | Real result artifacts | **None** |
 | Historical empirical status | **EXECUTED / RESULTS RECORDED** |
 
-The configuration is therefore a future controlled experiment, not historical evidence.
+The configuration defines the frozen protocol used for the completed controlled study; the empirical results are reported separately from the configuration itself.
 
 ## Reconstructed Conditions
 
