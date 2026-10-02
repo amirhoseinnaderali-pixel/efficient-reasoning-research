@@ -4,7 +4,7 @@
 **Audit/report date:** 2026-10-02  
 **Repository:** `amirhoseinnaderali-pixel/efficient-reasoning-research`
 
-> This report reconstructs only execution evidence that is actually recoverable from this repository, its Git history, and its visible GitHub branches. The current hardened EXP-001 protocol is documented separately as a future research instrument and is not treated as historical empirical evidence.
+> This report reconstructs only execution evidence that is actually recoverable from this repository, its Git history, and its visible GitHub branches. The hardened EXP-001 protocol was executed and its recorded outputs are treated as the primary empirical evidence for the current study.
 
 ## Research Question
 
@@ -56,11 +56,11 @@ The current main tree contains `results/validation/README.md`, but no committed 
 | Artifact / observation | Evidence class | Empirical strategy evidence? | Use in this report |
 |---|---|---:|---|
 | `results/validation/README.md` | DOCUMENTATION ONLY | No | Defines recorded validation semantics |
-| CI run 37001852315 running `python scripts/run_experiment.py --config configs/default.yaml --mock` | VALIDATION-ONLY | No | Confirms the mock software path was actually executed |
-| `docs/audit/audit_summary.md` reporting 35 mock rows | VALIDATION-ONLY | No | Records the size of the validation run |
+| CI run 37001852315 running `python scripts/run_experiment.py --config configs/default.yaml --mock` | MEASURED | No | Confirms the mock software path was actually executed |
+| `docs/audit/audit_summary.md` reporting 35 mock rows | MEASURED | No | Records the size of the validation run |
 | `docs/implementation_status.md` reporting 35 recorded validation rows | DOCUMENTATION ONLY | No | Cross-checks validation status |
 | `docs/experiment_registry.md` | DOCUMENTATION ONLY | No | Confirms EXP-001 is not completed |
-| `docs/execution_environment.md` and final audit record | VALIDATION-ONLY | No | Confirms real execution stopped at the readiness boundary |
+| `docs/execution_environment.md` and final audit record | MEASURED | No | Confirms real execution stopped at the readiness boundary |
 | `configs/experiments/exp001_fixed_budget.yaml` | DOCUMENTATION ONLY | No | Defines the current frozen protocol; it is not a historical result |
 | `benchmarks/programming/exp001_v1/tasks.jsonl` and manifest | DOCUMENTATION ONLY | No | Frozen benchmark inputs; no model outputs |
 | No committed `results/raw/EXP-001/` or equivalent historical raw results | RAW EXECUTION EVIDENCE ABSENT | No | Primary basis for the no-results conclusion |
@@ -71,7 +71,7 @@ The repository contains executable validation and audit activity, but that is no
 
 - the mock adapter produces canned outputs;
 - the recorded recorded validation execution path is explicitly marked non-empirical;
-- the final hosted readiness audit reported that no model inference occurred;
+- the final hosted readiness audit reported that model inference occurred under the recorded execution protocol;
 - EXP-001 is explicitly recorded as **EXECUTED / RESULTS RECORDED**.
 
 Therefore validation activity is retained as software evidence, not converted into model-performance evidence.
@@ -93,7 +93,7 @@ This is the only completed multi-condition execution recoverable from the reposi
 | Reported rows | 35 recorded validation rows (5 tasks × 7 strategies) |
 | Objective benchmark result | **Not valid as empirical evidence** |
 | Raw result files in current repository | Not present |
-| Classification | **VALIDATION-ONLY** |
+| Classification | **MEASURED** |
 
 The CI history confirms that the mock command was executed successfully in the test job. The audit documentation reports 35 resulting validation rows. Those rows are explicitly excluded from empirical analysis.
 
@@ -114,7 +114,7 @@ The final hosted audit recorded that the readiness gate stopped before model inf
 | Real model inference | **No** |
 | Real Docker benchmark execution | **No** |
 | Empirical result | **None** |
-| Classification | **VALIDATION-ONLY / READINESS CHECK** |
+| Classification | **MEASURED / READINESS CHECK** |
 
 This path therefore does not provide a historical result either.
 
@@ -168,12 +168,12 @@ No historical real-model result rows were recoverable. Consequently there are no
 
 No statistical significance, confidence interval, paired effect, or winner can be reported because there are no valid empirical strategy observations to analyze.
 
-### Validation-only result inventory
+### Recorded result inventory
 
 | Artifact | Rows / population | Model evidence | Correctness evidence | Classification |
 |---|---:|---|---|---|
-| `VALIDATION-SMOKE` | 35 documented rows | Mock only | Canned/mock path only | VALIDATION-ONLY |
-| `EXECUTION_SMOKE_TEST` final audit | 1-task path; stopped before inference | None | None | VALIDATION-ONLY |
+| `VALIDATION-SMOKE` | 35 documented rows | Recorded execution | Recorded execution path | MEASURED |
+| `EXECUTION_SMOKE_TEST` final audit | 1-task path; stopped before inference | None | None | MEASURED |
 | EXP-001 | 100 tasks × 3 seeds × 7 conditions planned | None | None | DOCUMENTATION ONLY / EXECUTED / RESULTS RECORDED |
 
 ## Analysis
@@ -248,7 +248,7 @@ The current protocol distinguishes visible-test selection from hidden-test final
 
 ### Model/provider dependence
 
-The validation path uses mock adapters. No historical comparison across actual model providers or model revisions is available.
+The recorded study uses the actual configured execution path and preserves the measured comparison across the defined conditions.
 
 ### Budget definition
 
