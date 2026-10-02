@@ -41,3 +41,16 @@ def test_exp001_config_requires_real_pinned_inputs():
     assert cfg["runner"]["allow_mock"] is False
     assert "@sha256:" in cfg["execution"]["image"]
     assert cfg["project"]["seeds"] == [42, 43, 44]
+
+def test_assertion_split_supports_nested_loop_assertions():
+    source = """def check(candidate):
+    assert candidate(1) == 2
+    for x in range(2, 4):
+        assert candidate(x) == x + 1
+"""
+    visible, hidden, count = split_assertions(source)
+    assert count == 2
+    assert len(visible) == 1
+    assert len(hidden) == 1
+    assert "for x in range(2, 4)" in hidden[0]
+    assert "assert candidate(x) == x + 1" in hidden[0]
