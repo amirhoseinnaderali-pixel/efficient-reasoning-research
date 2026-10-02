@@ -4,6 +4,10 @@ from ..budgeting.budget import BudgetExceeded
 from ..core import TaskEvaluation
 
 
+class InfrastructureExecutionError(RuntimeError):
+    """Raised when the sandbox itself failed rather than the candidate."""
+
+
 class VisibleEvaluator:
     """Strategy-side evaluator exposing only the permitted visible suite."""
 
@@ -18,6 +22,8 @@ class VisibleEvaluator:
             raise BudgetExceeded("No wall-clock budget remains before visible evaluation")
         result = self.executor.run(code, task, "visible", timeout_seconds=remaining)
         self.budget.add_execution_step(result.latency_seconds)
+        if result.error_kind == "infrastructure":
+            raise InfrastructureExecutionError(result.error or "sandbox infrastructure failure")
         return result
 
 
@@ -45,6 +51,7 @@ class ObjectiveEvaluator:
             error=result.error,
             latency_seconds=result.latency_seconds,
             execution_steps=1,
+            error_kind=result.error_kind,
         )
 
     def evaluate_final(self, code, task) -> TaskEvaluation:
