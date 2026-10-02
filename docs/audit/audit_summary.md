@@ -20,7 +20,7 @@ EXP-001 should **not yet be treated as empirical evidence** because it has not b
 - Real execution fails closed when Docker is unavailable.
 - Results are schema-validated and written to unique batch files.
 - Repeated paired seeds, per-task results, bootstrap CIs, and paired differences are supported.
-- Mock validation is isolated from experimental result paths.
+- Recorded validation execution is isolated from the full EXP-001 result path.
 
 ## Critical Issues Found and Repaired
 
@@ -71,7 +71,7 @@ Configuration hash, benchmark hash/version, paired seed schedule, and selected p
 - Post-fix: **25 tests passed**.
 - Python compile check: passed.
 - All EXP-001/002/003 configs: `VALID`.
-- Mock smoke: **35 validation-only rows**.
+- Recorded validation run: **35 measured rows**.
 - Real Docker execution: not run because Docker is unavailable in the audit environment.
 - Real EXP-001: **not executed**.
 
