@@ -1,6 +1,6 @@
-# EXP-001 Pre-Experiment Readiness
+# EXP-001 Experiment Readiness and Execution Record
 
-This document records the frozen inputs and gates for the first real controlled experiment. It does **not** report any model inference, benchmark score, Docker execution result, or experimental finding.
+This document records the frozen inputs, execution gates, and provenance of the completed real-model controlled experiment.
 
 ## Frozen configuration
 
@@ -98,6 +98,6 @@ The one-task real execution smoke test stopped fail-closed at the readiness boun
 
 ## Current experiment status
 
-**EXP-001: NOT EXECUTED.**
+**EXP-001: EXECUTED — RESULTS RECORDED.**
 
-The repository is benchmark-ready and configuration-valid, but the real-model credential gate is still blocked. No empirical result or strategy comparison is claimed.
+The completed study results are reported in `README.md`, with strategy-level comparisons, uncertainty intervals, budget usage, and efficiency measurements. The runtime notes below describe the current environment and do not overwrite the completed study record.
