@@ -39,6 +39,28 @@ jobs:
           print('TEST_REPR:',repr(row['test']))
           print('ARCHIVE_SHA256:',hashlib.sha256(archive).hexdigest())
           PY
+      - name: Audit all frozen task hashes
+        run: |
+          PYTHONPATH=src python - <<'PY'
+          import gzip, json, urllib.request
+          from efficient_reasoning.benchmarks.exp001 import canonical_task_hash, test_source_hash
+          m=json.load(open('benchmarks/manifests/exp001_v1.json')); p=m['provenance']
+          url=f"https://raw.githubusercontent.com/openai/human-eval/{p['source_commit']}/{p['source_path']}"
+          req=urllib.request.Request(url,headers={'User-Agent':'efficient-reasoning-research/1.0'})
+          archive=urllib.request.urlopen(req,timeout=30).read()
+          rows={x['task_id']:x for x in (json.loads(line) for line in gzip.decompress(archive).decode().splitlines() if line.strip())}
+          task_m=[]; test_m=[]
+          for e in m['tasks']:
+              r=rows[e['task_id']]
+              a=canonical_task_hash(r); b=test_source_hash(r['test'])
+              if a != e['task_sha256']: task_m.append((e['task_id'],e['task_sha256'],a))
+              if b != e['test_sha256']: test_m.append((e['task_id'],e['test_sha256'],b))
+          print('SELECTED_TASKS:',len(m['tasks']))
+          print('TASK_HASH_MISMATCH_COUNT:',len(task_m))
+          print('TEST_HASH_MISMATCH_COUNT:',len(test_m))
+          print('TASK_HASH_MISMATCHES:',task_m)
+          print('TEST_HASH_MISMATCHES:',test_m)
+          PY
       - name: Materialize frozen EXP-001 benchmark
         id: materialize
         continue-on-error: true
