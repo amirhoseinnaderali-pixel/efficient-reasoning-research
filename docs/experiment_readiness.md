@@ -92,9 +92,7 @@ The frozen EXP-001 benchmark has now been materialized and independently validat
 
 A clean hosted audit checkout reported **53 tests passed**. The frozen configuration was valid. Docker CLI and daemon checks were reachable in that audit environment.
 
-The runtime readiness gate reported exactly one remaining blocker:
-
-`OPENAI_API_KEY is missing`
+The final hosted audit reported exactly one blocker, `OPENAI_API_KEY is missing`. In the current execution runtime used for this final closure, Docker CLI is also unavailable, so the real smoke path cannot be launched here.
 
 The one-task real execution smoke test stopped fail-closed at the readiness boundary. It did not produce model inference or EXP-001 evidence.
 
