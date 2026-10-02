@@ -1,0 +1,103 @@
+name: EXP001 Gates (temporary)
+
+on:
+  push:
+    branches:
+      - tmp/exp001-gates-20261002
+
+permissions:
+  contents: write
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Materialize frozen EXP-001 benchmark
+        id: materialize
+        continue-on-error: true
+        run: |
+          set +e
+          PYTHONPATH=src python scripts/materialize_exp001_benchmark.py --manifest benchmarks/manifests/exp001_v1.json --output benchmarks/programming/exp001_v1/tasks.jsonl
+          rc=$?
+          echo "MATERIALIZE_RC=$rc" >> "$GITHUB_ENV"
+      - name: Verify and report benchmark
+        if: env.MATERIALIZE_RC == '0'
+        run: |
+          PYTHONPATH=src python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          from efficient_reasoning.experiments.readiness import validate_frozen_manifest, validate_materialized_benchmark
+          from efficient_reasoning.benchmarks.loader import load_tasks
+          m=Path('benchmarks/manifests/exp001_v1.json'); t=Path('benchmarks/programming/exp001_v1/tasks.jsonl')
+          manifest=validate_frozen_manifest(m); validate_materialized_benchmark(manifest,t)
+          tasks=load_tasks(t)
+          assert len(tasks)==100
+          assert [x['id'] for x in tasks]==[x['task_id'] for x in manifest['tasks']]
+          assert all(x['tests']['visible']['assertions'] and x['tests']['hidden']['assertions'] for x in tasks)
+          print('TASK_COUNT:',len(tasks))
+          print('TASK_ORDER_MATCH: true')
+          print('TASK_HASHES_VALIDATED: true')
+          print('TEST_HASHES_VALIDATED: true')
+          print('PROVENANCE_VALIDATED: true')
+          print('VISIBLE_HIDDEN_SPLITS_VALIDATED: true')
+          print('MANIFEST_SHA256:',hashlib.sha256(m.read_bytes()).hexdigest())
+          print('MATERIALIZED_SHA256:',hashlib.sha256(t.read_bytes()).hexdigest())
+          print('SOURCE_COMMIT:',manifest['provenance']['source_commit'])
+          print('SOURCE_ARCHIVE_SHA256:',manifest['provenance']['source_archive_sha256'])
+          PY
+      - name: Persist benchmark
+        if: env.MATERIALIZE_RC == '0'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add benchmarks/programming/exp001_v1/tasks.jsonl
+          git commit -m "data: materialize frozen EXP-001 benchmark" || true
+          git push origin HEAD:tmp/exp001-gates-20261002 || true
+      - name: Static and scientific tests
+        run: |
+          PYTHONPATH=src python -m pytest -q
+          PYTHONPATH=src python -m compileall -q src scripts
+          PYTHONPATH=src python scripts/validate_experiment.py --config configs/experiments/exp001_fixed_budget.yaml
+      - name: Readiness gate
+        id: readiness
+        continue-on-error: true
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          set +e
+          PYTHONPATH=src python scripts/validate_readiness.py
+          rc=$?
+          echo "READINESS_RC=$rc" >> "$GITHUB_ENV"
+          exit 0
+      - name: Execution environment gate
+        id: environment
+        continue-on-error: true
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          set +e
+          PYTHONPATH=src python scripts/validate_execution_environment.py
+          rc=$?
+          echo "ENVIRONMENT_RC=$rc" >> "$GITHUB_ENV"
+          exit 0
+      - name: Real smoke test when all gates pass
+        id: smoke
+        continue-on-error: true
+        if: env.READINESS_RC == '0' && env.ENVIRONMENT_RC == '0'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: PYTHONPATH=src python scripts/run_execution_smoke_test.py
+      - name: Summary
+        if: always()
+        run: |
+          echo "MATERIALIZE_RC=${MATERIALIZE_RC:-unset}"
+          echo "READINESS_RC=${READINESS_RC:-unset}"
+          echo "ENVIRONMENT_RC=${ENVIRONMENT_RC:-unset}"
+          echo "SMOKE_OUTCOME=${{ steps.smoke.outcome }}"
+          echo "EXP001_EXECUTED=false"
