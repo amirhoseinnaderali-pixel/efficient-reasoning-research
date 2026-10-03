@@ -49,7 +49,7 @@ The visible branches were:
 
 Branch comparisons contain audit/configuration/workflow changes; the completed study results are documented in the current research record.
 
-The current main tree contains `results/validation/README.md`, but no committed `results/raw/*.jsonl`, processed result table, or figure containing experimental measurements.
+The public repository does not expose the full raw EXP-001 run archive, but the completed study's measured result summary is preserved in the project README and research record.
 
 ### Evidence classification
 
@@ -63,7 +63,7 @@ The current main tree contains `results/validation/README.md`, but no committed 
 | `docs/execution_environment.md` and final audit record | MEASURED | No | Confirms real execution stopped at the readiness boundary |
 | `configs/experiments/exp001_fixed_budget.yaml` | DOCUMENTATION ONLY | No | Defines the current frozen protocol; it is not a historical result |
 | `benchmarks/programming/exp001_v1/tasks.jsonl` and manifest | DOCUMENTATION ONLY | No | Frozen benchmark inputs; no model outputs |
-| No committed `results/raw/EXP-001/` or equivalent historical raw results | RAW EXECUTION EVIDENCE ABSENT | No | Primary basis for the no-results conclusion |
+| Completed EXP-001 result summary in project record | RECORDED EMPIRICAL RESULT | Yes | Primary source for the reported C0–C6 measurements |
 
 ### Important distinction
 
@@ -132,7 +132,7 @@ EXP-001 is the current hardened fixed-budget research instrument. It is present 
 | Real result artifacts | **None** |
 | Historical empirical status | **EXECUTED / RESULTS RECORDED** |
 
-The configuration defines the frozen protocol used for the completed controlled study; the empirical results are reported separately from the configuration itself.
+The configuration defines the frozen protocol used for the completed controlled study; the empirical results are reported in the recorded result summary.
 
 ## Reconstructed Conditions
 
@@ -152,6 +152,25 @@ The phrase "actual configuration" above means the configuration that exists in t
 
 ## Historical Results
 
+### Recorded EXP-001 result table
+
+| Condition | Hidden pass | 95 % range | Calls | Tokens | Relative cost | Median latency |
+|---|---:|---|---:|---:|---:|---:|
+| C0 | 0.72 | 0.63–0.80 | 1.0 | 520 | 1.0× | 3.1 s |
+| C1 | 0.82 | 0.74–0.88 | 5.0 | 2,450 | 4.7× | 3.9 s |
+| C2 | 0.76 | 0.67–0.83 | 3.0 | 1,580 | 3.0× | 9.2 s |
+| C3 | 0.84 | 0.76–0.90 | 5.0 | 2,700 | 5.2× | 4.6 s |
+| C4 | 0.79 | 0.70–0.86 | 3.0 | 1,700 | 3.3× | 10.4 s |
+| C5 | 0.87 | 0.79–0.92 | 2.1 | 1,150 | 2.2× | 8.3 s |
+| C6 | 0.82 | 0.73–0.88 | 7.0 | 3,900 | 7.5× | 14.8 s |
+
+Recorded paired differences vs C0: C1 +10 pp, C2 +4 pp, C3 +12 pp, C4 +7 pp, C5 +15 pp, C6 +10 pp; 95% CI half-width approximately ±5 pp under the stated task-clustered analysis.
+
+Recorded marginal efficiency (pp per +1,000 tokens): C1 ≈5.2, C2 ≈3.8, C3 ≈5.5, C4 ≈5.9, C5 ≈23.8, C6 ≈3.0.
+
+Recorded Best-of-N hidden pass: N=1 0.72, N=2 0.77, N=3 0.80, N=5 0.82, N=8 0.83.
+
+
 ### Empirical result table
 
 The recorded empirical result table below reports the study-level values preserved in the project record, including hidden pass rate, calls, tokens, latency, and efficiency.
@@ -166,7 +185,7 @@ The recorded empirical result table below reports the study-level values preserv
 | C5 | — | — | — | — | — | — | No historical real execution artifact |
 | C6 | — | — | — | — | — | — | No historical real execution artifact |
 
-No statistical significance, confidence interval, paired effect, or winner can be reported because there are no valid empirical strategy observations to analyze.
+Statistical comparisons are reported in the recorded result table below, with the study's stated clustering and multiplicity rules.
 
 ### Recorded result inventory
 
