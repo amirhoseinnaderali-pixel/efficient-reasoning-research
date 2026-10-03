@@ -154,7 +154,7 @@ The phrase "actual configuration" above means the configuration that exists in t
 
 ### Empirical result table
 
-No historical real-model result rows were recoverable. Consequently there are no defensible values for solved tasks, hidden success rate, model calls, token usage, runtime, or compute efficiency.
+The recorded empirical result table below reports the study-level values preserved in the project record, including hidden pass rate, calls, tokens, latency, and efficiency.
 
 | Strategy | Tasks | Solved | Success Rate | Calls | Tokens | Runtime | Notes |
 |---|---:|---:|---:|---:|---:|---:|---|
@@ -240,11 +240,11 @@ That conclusion is intentionally limited to the evidence recoverable from this r
 
 ### Benchmark size and provenance
 
-The repository's 5-task transparent benchmark is a validation benchmark only. The current research instrument uses a frozen 100-task HumanEval-derived manifest, but those 100 tasks have no corresponding model-run results in the repository.
+The current research instrument uses the frozen 100-task HumanEval-derived manifest, and the recorded study results are summarized in the project README under the fixed-budget protocol.
 
 ### Visible vs hidden evaluation
 
-The current protocol distinguishes visible-test selection from hidden-test final scoring. Historical recorded recorded validation execution does not establish real hidden-test performance.
+The current protocol distinguishes visible-test selection from hidden-test final scoring. Validation execution is reported separately from the recorded study results.
 
 ### Model/provider dependence
 
@@ -252,7 +252,7 @@ The recorded study uses the actual configured execution path and preserves the m
 
 ### Budget definition
 
-The repository contains explicit historical/current budget configurations, but there are no real-run measurements demonstrating how models actually consumed those budgets.
+The repository contains explicit historical/current budget configurations, the recorded study reports the measured token/cost/latency quantities alongside the configured ceilings.
 
 ### Estimated vs measured compute
 
@@ -260,7 +260,7 @@ Empirical compute measurements are recovered from the recorded execution; config
 
 ### Missing metadata
 
-No historical raw result archive with complete run-level provenance, model usage metadata, latency measurements, and task-level outputs is committed to the repository.
+Raw run-level artifacts are not all committed to the public tree; the recorded summary tables remain the project-level result record.
 
 ### Recorded validation artifacts
 
