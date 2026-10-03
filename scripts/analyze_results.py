@@ -10,7 +10,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 from efficient_reasoning.logging.schema import validate_result
-from efficient_reasoning.evaluation.statistics import bootstrap_ci, mean
+from efficient_reasoning.evaluation.statistics import bootstrap_ci, mean, paired_task_deltas
 
 
 def load_rows(path: Path):
@@ -61,7 +61,7 @@ def main():
         report["strategies"][strategy] = {
             "n_rows": len(values),
             "mean_hidden_pass_rate": mean(values),
-            "bootstrap_95_ci": bootstrap_ci(values),
+            "bootstrap_95_ci": bootstrap_ci(values, clusters=[r["task_id"] for r in group_rows]),
             "cost_proxy_available_rows": len(available_costs),
             "mean_cost_proxy_if_complete": (
                 mean(available_costs) if len(available_costs) == len(group_rows) else None
@@ -72,23 +72,16 @@ def main():
             ),
         }
 
-    baseline_pairs = {
-        (seed, task): value
-        for (seed, task, strategy), value in by_pair.items()
-        if strategy == args.baseline
-    }
     for strategy in sorted(by_strategy):
         if strategy == args.baseline:
             continue
-        deltas = []
-        for (seed, task, candidate_strategy), value in by_pair.items():
-            if candidate_strategy == strategy and (seed, task) in baseline_pairs:
-                deltas.append(value - baseline_pairs[(seed, task)])
+        task_deltas = paired_task_deltas(rows, strategy, baseline=args.baseline)
         report["paired_vs_baseline"][strategy] = {
             "baseline": args.baseline,
-            "n_pairs": len(deltas),
-            "mean_delta_hidden_pass_rate": mean(deltas),
-            "bootstrap_95_ci": bootstrap_ci(deltas, seed=5678) if deltas else None,
+            "n_task_pairs": len(task_deltas),
+            "mean_delta_hidden_pass_rate": mean(task_deltas),
+            "bootstrap_95_ci": bootstrap_ci(task_deltas, seed=5678) if task_deltas else None,
+            "cluster_unit": "task",
         }
 
     out = Path(args.output)
