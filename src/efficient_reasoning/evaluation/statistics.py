@@ -41,6 +41,39 @@ def bootstrap_ci(values, seed=1234, samples=10000, clusters=None):
     return [lo, hi]
 
 
+def paired_sign_flip_pvalue(differences, seed=2468, samples=10000):
+    """Monte Carlo paired sign-flip p-value for a task-level mean difference."""
+    differences = list(differences)
+    if not differences:
+        return None
+    observed = abs(statistics.fmean(differences))
+    if all(value == 0 for value in differences):
+        return 1.0
+    rng = random.Random(seed)
+    extreme = 0
+    for _ in range(samples):
+        signed = [
+            value if rng.getrandbits(1) else -value
+            for value in differences
+        ]
+        if abs(statistics.fmean(signed)) >= observed:
+            extreme += 1
+    return (extreme + 1) / (samples + 1)
+
+
+def holm_bonferroni(pvalues):
+    """Return Holm-adjusted p-values in the original key order."""
+    ordered = sorted(pvalues.items(), key=lambda item: item[1])
+    adjusted = {}
+    running = 0.0
+    m = len(ordered)
+    for i, (key, pvalue) in enumerate(ordered):
+        corrected = min(1.0, pvalue * (m - i))
+        running = max(running, corrected)
+        adjusted[key] = running
+    return adjusted
+
+
 def paired_task_deltas(rows, strategy, baseline="c0_single"):
     """Return one paired delta per task after averaging available seeds."""
     by_task_strategy = defaultdict(list)
