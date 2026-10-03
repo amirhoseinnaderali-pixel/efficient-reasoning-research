@@ -51,3 +51,21 @@ def test_analysis_rejects_duplicate_task_seed_strategy(tmp_path):
     path.write_text(json.dumps(row) + "\n" + json.dumps(row) + "\n")
     with pytest.raises(ValueError, match="Duplicate task-seed-strategy"):
         load_rows(path)
+
+
+def test_bootstrap_ci_resamples_tasks_not_rows():
+    values = [1.0, 1.0, 0.0, 0.0]
+    clusters = ["task-a", "task-a", "task-b", "task-b"]
+    lo, hi = bootstrap_ci(values, seed=1, samples=100, clusters=clusters)
+    assert lo == hi == 0.5
+
+
+def test_paired_task_deltas_average_seeds():
+    from efficient_reasoning.evaluation.statistics import paired_task_deltas
+    rows = [
+        {"task_id": "t1", "seed": 42, "strategy": "c0_single", "status": "completed", "evaluation": {"hidden_pass_rate": 1.0}},
+        {"task_id": "t1", "seed": 43, "strategy": "c0_single", "status": "completed", "evaluation": {"hidden_pass_rate": 0.0}},
+        {"task_id": "t1", "seed": 42, "strategy": "c5_exec_feedback", "status": "completed", "evaluation": {"hidden_pass_rate": 1.0}},
+        {"task_id": "t1", "seed": 43, "strategy": "c5_exec_feedback", "status": "completed", "evaluation": {"hidden_pass_rate": 1.0}},
+    ]
+    assert paired_task_deltas(rows, "c5_exec_feedback") == [0.5]
