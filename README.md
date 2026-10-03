@@ -30,6 +30,23 @@ No strategy is assumed superior. The recorded measurements below report what was
 
 ### Research positioning and benchmark boundary
 
+### Portfolio relationship
+
+These repositories form a **research program**, not six independent replications of one experiment:
+
+| Repository | Distinct question / role |
+|---|---|
+| `Reasoning-Is-All-You-Need` | IOI-style C++ test-time reasoning pipeline; planning, candidate generation, objective selection, debugging |
+| `multi-agent-react-sandbox` | ReAct / multi-agent program synthesis plus a historical measurement-validity case study and later controlled C1–C5 comparison |
+| `graph-structured-reasoning-research` | Same-candidate-set study of graph aggregation versus alternative selection mechanisms |
+| `efficient-reasoning-research` | Fixed inference-budget comparison of seven reasoning strategies |
+| `training-vs-inference-compute-research` | Allocation of a fixed compute envelope between training and inference |
+| `multi-model-reasoning-research` | Fixed-budget comparison focused specifically on cross-model collaboration and information flow |
+
+The repeated labels C0–C6 are **local experiment labels, not a shared benchmark definition**. The repositories intentionally use different benchmarks, model freezes, condition semantics, and estimands; their results are not pooled as independent evidence.
+
+
+
 This study is not introducing repeated sampling, self-refinement, or execution feedback as new mechanisms. Those are established directions; see [Self-Refine](https://arxiv.org/abs/2303.17651), [Large Language Monkeys](https://arxiv.org/abs/2407.21787), and [test-time compute scaling](https://arxiv.org/abs/2408.03314). The intended contribution is the controlled comparison of several such strategies under a single fixed-budget protocol.
 
 The current benchmark is **HumanEval-derived** and therefore benchmark-bounded. HumanEval has known test-insufficiency and contamination concerns; EvalPlus showed that stronger tests can uncover incorrect code and change rankings ([EvalPlus](https://arxiv.org/abs/2305.01210)), while LiveCodeBench was designed around continuously collected competition problems to reduce contamination risk ([LiveCodeBench](https://arxiv.org/abs/2403.07974)). The current results are therefore not presented as a contamination-free state-of-the-art claim. A harder/live benchmark is the planned external replication target.
