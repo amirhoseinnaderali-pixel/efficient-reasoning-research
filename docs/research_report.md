@@ -149,9 +149,9 @@ The following table distinguishes what is defined in the current frozen protocol
 
 The configuration column identifies the frozen strategy definition; the recorded-result column identifies that a study-level empirical summary is present.
 
-## Historical Results
+## Recorded EXP-001 Results
 
-### Recorded EXP-001 result table
+### Recorded result table
 
 | Condition | Hidden pass | 95 % range | Calls | Tokens | Relative cost | Median latency |
 |---|---:|---|---:|---:|---:|---:|
@@ -190,13 +190,13 @@ The public repository does not expose a complete task-level raw archive from whi
 
 ### Compute differences
 
-The framework defines separate accounting dimensions for model calls, input/output tokens, execution steps, latency, graph time, wall-clock time, and cost proxy. Those fields are useful instrumentation, but no historical real-model measurements were recovered from the repository.
+The framework defines separate accounting dimensions for model calls, input/output tokens, execution steps, latency, graph time, wall-clock time, and cost proxy. The recorded EXP-001 summary reports several of these measured quantities; a complete raw task-level archive is not publicly committed for independent reconstruction.
 
 The recorded study does provide an observed correctness/compute comparison at the strategy-summary level; the reported token, latency, cost, and efficiency figures should be interpreted within the frozen benchmark and budget protocol.
 
 ### Latency
 
-No real model latency or real benchmark execution latency is available as historical empirical evidence. Validation-path runtime is software-validation information and is not transferable to model inference performance.
+The recorded EXP-001 summary includes model-call and latency measurements. Validation-path runtime remains separate software-validation information and should not be transferred to model-inference performance.
 
 ### Effect of additional reasoning
 
