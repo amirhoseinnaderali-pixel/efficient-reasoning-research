@@ -20,7 +20,7 @@ def _cluster_means(values, clusters):
     return [statistics.fmean(grouped[key]) for key in sorted(grouped)]
 
 
-def bootstrap_ci(values, seed=1234, samples=5000, clusters=None):
+def bootstrap_ci(values, seed=1234, samples=10000, clusters=None):
     """Percentile bootstrap CI; with clusters, resample clusters rather than rows."""
     if clusters is not None:
         values = _cluster_means(values, clusters)
