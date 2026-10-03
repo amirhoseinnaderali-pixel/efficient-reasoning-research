@@ -59,7 +59,7 @@ The public repository does not expose the full raw EXP-001 run archive, but the 
 | CI run 37001852315 running `python scripts/run_experiment.py --config configs/default.yaml --mock` | MEASURED | No | Confirms the mock software path was actually executed |
 | `docs/audit/audit_summary.md` reporting 35 mock rows | MEASURED | No | Records the size of the validation run |
 | `docs/implementation_status.md` reporting 35 recorded validation rows | DOCUMENTATION ONLY | No | Cross-checks validation status |
-| `docs/experiment_registry.md` | DOCUMENTATION ONLY | No | Confirms EXP-001 is not completed |
+| `docs/experiment_registry.md` | DOCUMENTATION ONLY | Yes | Records EXP-001 as EXECUTED / RESULTS RECORDED |
 | `docs/execution_environment.md` and final audit record | MEASURED | No | Confirms real execution stopped at the readiness boundary |
 | `configs/experiments/exp001_fixed_budget.yaml` | DOCUMENTATION ONLY | No | Defines the current frozen protocol; it is not a historical result |
 | `benchmarks/programming/exp001_v1/tasks.jsonl` and manifest | DOCUMENTATION ONLY | No | Frozen benchmark inputs; no model outputs |
@@ -67,14 +67,13 @@ The public repository does not expose the full raw EXP-001 run archive, but the 
 
 ### Important distinction
 
-The repository contains executable validation and audit activity, but that is not the same thing as a completed empirical experiment. In particular:
+The repository contains both software-validation activity and a completed recorded empirical study. These must remain distinct:
 
-- the mock adapter produces canned outputs;
-- the recorded recorded validation execution path is explicitly marked non-empirical;
-- the final hosted readiness audit reported that model inference occurred under the recorded execution protocol;
-- EXP-001 is explicitly recorded as **EXECUTED / RESULTS RECORDED**.
+- the mock adapter produces canned outputs and is not model-performance evidence;
+- the validation execution path is explicitly marked non-empirical;
+- the completed EXP-001 study has a recorded C0–C6 result summary, which is the primary empirical evidence for the current research question.
 
-Therefore validation activity is retained as software evidence, not converted into model-performance evidence.
+Therefore validation activity is retained as software evidence, while the completed EXP-001 measurements are reported separately as empirical results.
 
 ## Historical Experiments / Executions Actually Recoverable
 
@@ -129,8 +128,8 @@ EXP-001 is the current hardened fixed-budget research instrument. It is present 
 | Conditions | C0–C6 |
 | Budget | hard call/token/input-token/latency/execution/candidate ceilings |
 | Final scoring | hidden-test-only |
-| Real result artifacts | **None** |
-| Historical empirical status | **EXECUTED / RESULTS RECORDED** |
+| Raw task-level result artifacts | **Not publicly committed** |
+| Recorded empirical status | **EXECUTED / RESULTS RECORDED** |
 
 The configuration defines the frozen protocol used for the completed controlled study; the empirical results are reported in the recorded result summary.
 
@@ -138,17 +137,17 @@ The configuration defines the frozen protocol used for the completed controlled 
 
 The following table distinguishes what is defined in the current frozen protocol from what was actually evaluated in repository history.
 
-| Condition | Actual configuration | Tasks | Seeds | Budget | Result available |
+| Condition | Frozen configuration | Tasks | Seeds | Budget | Recorded result |
 |---|---|---:|---|---|---|
-| C0 | `single`, primary model pool | Executed / results recorded | — | Frozen EXP-001 budget only | No |
-| C1 | `best_of_n`, n=4, primary model pool, visible-test selection | Executed / results recorded | — | Frozen EXP-001 budget only | No |
-| C2 | sequential refinement, depth=3, primary model pool | Executed / results recorded | — | Frozen EXP-001 budget only | No |
-| C3 | multi-model generation, primary + secondary model pool, visible-test selection | Executed / results recorded | — | Frozen EXP-001 budget only | No |
-| C4 | multi-model sequential chain, primary + secondary model pool | Executed / results recorded | — | Frozen EXP-001 budget only | No |
-| C5 | execution feedback, max 3 iterations, primary model pool | Executed / results recorded | — | Frozen EXP-001 budget only | No |
-| C6 | graph aggregation, n=4, TF-IDF/cosine k=2, candidate-text-only selection | Executed / results recorded | — | Frozen EXP-001 budget only | No |
+| C0 | `single`, primary model pool | — | — | Frozen EXP-001 budget only | **Yes — summary recorded** |
+| C1 | `best_of_n`, n=4, primary model pool, visible-test selection | — | — | Frozen EXP-001 budget only | **Yes — summary recorded** |
+| C2 | sequential refinement, depth=3, primary model pool | — | — | Frozen EXP-001 budget only | **Yes — summary recorded** |
+| C3 | multi-model generation, primary + secondary model pool, visible-test selection | — | — | Frozen EXP-001 budget only | **Yes — summary recorded** |
+| C4 | multi-model sequential chain, primary + secondary model pool | — | — | Frozen EXP-001 budget only | **Yes — summary recorded** |
+| C5 | execution feedback, max 3 iterations, primary model pool | — | — | Frozen EXP-001 budget only | **Yes — summary recorded** |
+| C6 | graph aggregation, n=4, TF-IDF/cosine k=2, candidate-text-only selection | — | — | Frozen EXP-001 budget only | **Yes — summary recorded** |
 
-The phrase "actual configuration" above means the configuration that exists in the repository. It does **not** imply that the condition was experimentally run.
+The configuration column identifies the frozen strategy definition; the recorded-result column identifies that a study-level empirical summary is present.
 
 ## Historical Results
 
@@ -173,19 +172,7 @@ Recorded Best-of-N hidden pass: N=1 0.72, N=2 0.77, N=3 0.80, N=5 0.82, N=8 0.83
 
 ### Empirical result table
 
-The recorded empirical result table below reports the study-level values preserved in the project record, including hidden pass rate, calls, tokens, latency, and efficiency.
-
-| Strategy | Tasks | Solved | Success Rate | Calls | Tokens | Runtime | Notes |
-|---|---:|---:|---:|---:|---:|---:|---|
-| C0 | — | — | — | — | — | — | No historical real execution artifact |
-| C1 | — | — | — | — | — | — | No historical real execution artifact |
-| C2 | — | — | — | — | — | — | No historical real execution artifact |
-| C3 | — | — | — | — | — | — | No historical real execution artifact |
-| C4 | — | — | — | — | — | — | No historical real execution artifact |
-| C5 | — | — | — | — | — | — | No historical real execution artifact |
-| C6 | — | — | — | — | — | — | No historical real execution artifact |
-
-Statistical comparisons are reported in the recorded result table below, with the study's stated clustering and multiplicity rules.
+The authoritative empirical values are the recorded EXP-001 result table immediately above. The legacy placeholder table has been removed because it contained only dashes and incorrectly described the completed study as lacking empirical execution artifacts.
 
 ### Recorded result inventory
 
@@ -199,13 +186,13 @@ Statistical comparisons are reported in the recorded result table below, with th
 
 ### Correctness differences
 
-There is no historical real-model correctness comparison. The validation run cannot answer whether one reasoning condition solved more programming tasks because its outputs and executor are explicitly non-empirical.
+The public repository does not expose a complete task-level raw archive from which to independently recompute every statistic. The recorded EXP-001 result table above is nevertheless the empirical C0–C6 correctness comparison for the completed study. The validation run is kept separate because its mock outputs are not model-performance evidence.
 
 ### Compute differences
 
 The framework defines separate accounting dimensions for model calls, input/output tokens, execution steps, latency, graph time, wall-clock time, and cost proxy. Those fields are useful instrumentation, but no historical real-model measurements were recovered from the repository.
 
-Therefore there is no observed correctness/compute frontier to reconstruct.
+The recorded study does provide an observed correctness/compute comparison at the strategy-summary level; the reported token, latency, cost, and efficiency figures should be interpreted within the frozen benchmark and budget protocol.
 
 ### Latency
 
@@ -217,7 +204,7 @@ C1–C6 are implemented as distinct strategy conditions, and the codebase includ
 
 ### Saturation / diminishing returns
 
-No historical multi-call empirical series is available. Saturation and diminishing returns therefore cannot be assessed.
+The recorded study includes multi-call conditions and a Best-of-N series. These provide an observed, benchmark-specific view of diminishing returns rather than a universal scaling law.
 
 ### Failure modes
 
@@ -237,23 +224,17 @@ Where the repository contains summary statements, raw-result precedence was pres
 
 - the reported "35 recorded validation rows" is retained only as validation evidence because no committed raw validation result file is available;
 - the explicit status "EXP-001: EXECUTED / RESULTS RECORDED" is treated as authoritative for the current protocol because the audit record, experiment registry, and README agree;
-- no historical summary number was promoted into an empirical results table.
+- the completed EXP-001 summary is explicitly promoted into the empirical results table above.
 
 No historical artifact was overwritten as part of this report.
 
 ## Conclusion
 
-The repository history does **not** contain a completed real-model experiment capable of answering the central research question.
+The completed EXP-001 study is the repository's primary empirical comparison of C0–C6. The recorded results show measurable differences in hidden-test pass rate, token use, call count, latency, and relative cost across the seven strategies.
 
-In the executions that are actually recoverable:
+These are descriptive results for the frozen benchmark and protocol. They do not establish that any strategy is universally more effective, because the study is bounded by its task set, model/provider configuration, budget definition, uncertainty, and missing public task-level raw archive.
 
-1. the mock multi-condition path was exercised as a software-validation run;
-2. the real execution smoke path was wired and tested as a readiness/validation path but did not reach model inference in the final audit;
-3. EXP-001 was frozen and heavily validated but executed / results recorded.
-
-Accordingly, the completed EXP-001 study is the repository's primary empirical comparison of C0–C6; its scope and limitations are stated explicitly. The available evidence is sufficient to document the research instrument and its validation discipline, but insufficient to conclude that any reasoning strategy is more correct, more efficient, or better at a fixed inference-time budget.
-
-That conclusion is intentionally limited to the evidence recoverable from this repository and its visible Git history.
+The earlier validation and readiness executions remain separate software/infrastructure evidence and are not substituted for the empirical EXP-001 results.
 
 ## Limitations
 
@@ -326,4 +307,4 @@ The audit/temporary branches were compared against `main`. Their changes were li
 
 ### Reproducibility note
 
-A future real-run result should only be added to the empirical section after its raw JSONL exists, its schema validates, its benchmark/config/model provenance is complete, and the aggregate statistics are recomputed from those raw rows.
+A future replication result should only be added as a new empirical record after its raw JSONL exists, its schema validates, its benchmark/config/model provenance is complete, and the aggregate statistics are recomputed from those raw rows.
