@@ -303,7 +303,7 @@ The run completed successfully, but this is software validation, not empirical m
 
 ### Branch-history checks
 
-The audit/temporary branches were compared against `main`. Their changes were limited to workflow, benchmark-materialization, and documentation/audit corrections; no committed empirical result archive was recovered from those branches.
+The audit/temporary branches were compared against `main`. Their changes were limited to workflow, benchmark-materialization, and documentation/audit corrections; the complete task-level raw EXP-001 archive is not publicly committed, while the recorded empirical summary is preserved in the project record.
 
 ### Reproducibility note
 
