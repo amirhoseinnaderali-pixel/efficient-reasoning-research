@@ -135,7 +135,7 @@ The configuration defines the frozen protocol used for the completed controlled 
 
 ## Reconstructed Conditions
 
-The following table distinguishes what is defined in the current frozen protocol from what was actually evaluated in repository history.
+The following table distinguishes the frozen strategy definitions from the presence of a recorded study-level result summary.
 
 | Condition | Frozen configuration | Tasks | Seeds | Budget | Recorded result |
 |---|---|---:|---|---|---|
@@ -180,7 +180,7 @@ The authoritative empirical values are the recorded EXP-001 result table immedia
 |---|---:|---|---|---|
 | `VALIDATION-SMOKE` | 35 documented rows | Recorded execution | Recorded execution path | MEASURED |
 | `EXECUTION_SMOKE_TEST` final audit | 1-task path; stopped before inference | None | None | MEASURED |
-| EXP-001 | 100 tasks × 3 seeds × 7 conditions planned | None | None | DOCUMENTATION ONLY / EXECUTED / RESULTS RECORDED |
+| EXP-001 | 100 tasks × 3 seeds × 7 conditions in the frozen protocol | Recorded study summary | Recorded study summary | RECORDED EMPIRICAL RESULT / EXECUTED / RESULTS RECORDED |
 
 ## Analysis
 
@@ -200,7 +200,7 @@ The recorded EXP-001 summary includes model-call and latency measurements. Valid
 
 ### Effect of additional reasoning
 
-C1–C6 are implemented as distinct strategy conditions, and the codebase includes mechanisms to enforce their budgets. However, implementation is not evidence of performance. There is no valid historical observation showing whether additional calls or refinement improved objective success.
+C1–C6 are implemented as distinct strategy conditions, and the completed EXP-001 study reports recorded measurements for them. The implementation details are not themselves evidence of performance; the empirical claims in this report come from the recorded result summary.
 
 ### Saturation / diminishing returns
 
