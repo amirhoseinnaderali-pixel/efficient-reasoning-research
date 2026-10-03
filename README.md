@@ -20,11 +20,19 @@ Test-time compute (repeated sampling, verification, refinement, execution feedba
 
 **Recorded experimental finding.** Execution-based feedback (C5) achieved ≈ +15 pp hidden pass rate over single generation at ≈ 2.2× tokens, while graph aggregation (C6) used ≈ 7.5× tokens for a smaller gain than C5.
 
+**Evidence at a glance.** The recorded hidden-pass rates are **0.72, 0.82, 0.76, 0.84, 0.79, 0.87, and 0.82** for C0–C6. The same recorded table contains calls, output tokens, relative cost, latency, paired differences, and the Best-of-N series. The public repository does not expose the complete task-level raw archive, so the summary is an auditable recorded study result rather than a claim that every statistic can be independently recomputed from public raw rows.
+
 ## 2. Research question
 
 > Under a fixed inference-time compute budget, how do different reasoning strategies compare in objective correctness and compute efficiency?
 
 No strategy is assumed superior. The recorded measurements below report what was observed under the stated protocol.
+
+### Research positioning and benchmark boundary
+
+This study is not introducing repeated sampling, self-refinement, or execution feedback as new mechanisms. Those are established directions; see [Self-Refine](https://arxiv.org/abs/2303.17651), [Large Language Monkeys](https://arxiv.org/abs/2407.21787), and [test-time compute scaling](https://arxiv.org/abs/2408.03314). The intended contribution is the controlled comparison of several such strategies under a single fixed-budget protocol.
+
+The current benchmark is **HumanEval-derived** and therefore benchmark-bounded. HumanEval has known test-insufficiency and contamination concerns; EvalPlus showed that stronger tests can uncover incorrect code and change rankings ([EvalPlus](https://arxiv.org/abs/2305.01210)), while LiveCodeBench was designed around continuously collected competition problems to reduce contamination risk ([LiveCodeBench](https://arxiv.org/abs/2403.07974)). The current results are therefore not presented as a contamination-free state-of-the-art claim. A harder/live benchmark is the planned external replication target.
 
 ## 3. Experimental conditions
 
