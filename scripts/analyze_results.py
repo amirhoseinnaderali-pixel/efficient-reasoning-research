@@ -10,7 +10,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 from efficient_reasoning.logging.schema import validate_result
-from efficient_reasoning.evaluation.statistics import bootstrap_ci, mean, paired_task_deltas
+from efficient_reasoning.evaluation.statistics import bootstrap_ci, holm_bonferroni, mean, paired_sign_flip_pvalue, paired_task_deltas
 
 
 def load_rows(path: Path):
@@ -72,15 +72,28 @@ def main():
             ),
         }
 
+    raw_pvalues = {}
+    task_deltas_by_strategy = {}
     for strategy in sorted(by_strategy):
         if strategy == args.baseline:
             continue
         task_deltas = paired_task_deltas(rows, strategy, baseline=args.baseline)
+        task_deltas_by_strategy[strategy] = task_deltas
+        raw_pvalues[strategy] = (
+            paired_sign_flip_pvalue(task_deltas) if task_deltas else None
+        )
+
+    valid_pvalues = {k: v for k, v in raw_pvalues.items() if v is not None}
+    adjusted_pvalues = holm_bonferroni(valid_pvalues)
+
+    for strategy, task_deltas in task_deltas_by_strategy.items():
         report["paired_vs_baseline"][strategy] = {
             "baseline": args.baseline,
             "n_task_pairs": len(task_deltas),
             "mean_delta_hidden_pass_rate": mean(task_deltas),
             "bootstrap_95_ci": bootstrap_ci(task_deltas, seed=5678) if task_deltas else None,
+            "paired_sign_flip_p": raw_pvalues[strategy],
+            "holm_adjusted_p": adjusted_pvalues.get(strategy),
             "cluster_unit": "task",
         }
 
