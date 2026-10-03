@@ -2,6 +2,8 @@
 
 **A controlled study of how a fixed inference-time compute budget should be allocated across reasoning strategies for code generation.**
 
+**Portfolio role.** The broad inference-strategy comparison in the portfolio. It is the central fixed-budget reasoning study, while the sibling repositories isolate specific mechanisms, domains, or compute-allocation questions.
+
 ![status](https://img.shields.io/badge/EXP--001-completed%20%7C%20results%20recorded-brightgreen)
 
 ![license](https://img.shields.io/badge/license-MIT-blue)
