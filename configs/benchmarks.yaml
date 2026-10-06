@@ -1,0 +1,14 @@
+benchmarks:
+  humaneval-stratified-100-v1:
+    path: benchmarks/programming/exp001_v1/tasks.jsonl
+    manifest: benchmarks/manifests/exp001_v1.json
+    task_type: python_function_generation
+    version: 1.0.0
+    provenance: "Derived from the pinned openai/human-eval source; prompts are transformed only to remove doctest input/output examples, while the canonical test source remains hash-locked."
+    materialization_command: "python scripts/materialize_exp001_benchmark.py --manifest benchmarks/manifests/exp001_v1.json --output benchmarks/programming/exp001_v1/tasks.jsonl"
+  transparent-python-mini-v1:
+    path: benchmarks/programming/smoke_tasks.jsonl
+    task_type: function_generation
+    version: 1
+    validation_only: true
+    provenance: "Repository-owned validation-only benchmark; never used as EXP-001 evidence."

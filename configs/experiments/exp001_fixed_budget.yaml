@@ -1,0 +1,86 @@
+project:
+  name: efficient-reasoning-research
+  seeds: [42, 43, 44]
+  seed_policy: paired_task_seed_v1
+
+benchmark:
+  name: humaneval-stratified-100-v1
+  manifest_path: benchmarks/manifests/exp001_v1.json
+  tasks_path: benchmarks/programming/exp001_v1/tasks.jsonl
+  source_verification: required_at_runtime
+
+budget:
+  max_model_calls: 8
+  max_generated_tokens: 9600
+  max_input_tokens: 40000
+  max_latency_seconds: 300
+  max_execution_steps: 12
+  max_candidates: 8
+
+# Scientific generation controls not overridden by individual strategies.
+# Exact model-specific generation parameters are frozen in configs/models.yaml.
+generation:
+  max_output_tokens_per_call: 1200
+  timeout_seconds: 120
+  seed_mode: task_seed_v1
+
+execution:
+  backend: docker
+  timeout_seconds: 3
+  memory_mb: 256
+  cpus: 1.0
+  pid_limit: 64
+  network: none
+  platform: linux/amd64
+  image: python:3.12-slim-bookworm@sha256:392307d22300de8b5986851a12d9176dfc0fc073e65bf6523ebd7dcbeb23564e
+  image_digest_source: https://hub.docker.com/layers/library/python/3.12-slim-bookworm/images/sha256-eb37f58646a901dc7727cf448cae36daaefaba79de33b5058dab79aa4c04aefb
+  python_version: "3.12"
+  sandbox_policy: docker_strict_v1
+
+# C0/C1/C2/C5/C6 are same-model conditions.
+# C3/C4 intentionally use a heterogeneous model-id pool.
+models:
+  - primary_openai
+  - secondary_openai
+
+strategies:
+  c0_single:
+    type: single
+    model_pool: [primary_openai]
+  c1_best_of_n:
+    type: best_of_n
+    n: 4
+    model_pool: [primary_openai]
+  c2_sequential_refinement:
+    type: sequential_refinement
+    depth: 3
+    model_pool: [primary_openai]
+  c3_multi_model:
+    type: multi_model
+    model_pool: [primary_openai, secondary_openai]
+  c4_multi_model_chain:
+    type: multi_model_chain
+    model_pool: [primary_openai, secondary_openai]
+  c5_execution_feedback:
+    type: execution_feedback
+    max_iterations: 3
+    model_pool: [primary_openai]
+  c6_graph_aggregation:
+    type: graph_aggregation
+    n: 4
+    model_pool: [primary_openai]
+    graph:
+      method: tfidf_cosine
+      k: 2
+      embedding_model: tfidf_builtin_v1
+      selection_input: candidate_text_only
+      uses_objective_results: false
+
+runner:
+  experiment_id: EXP-001
+  output_dir: results/raw/EXP-001
+  max_retries: 0
+  allow_mock: false
+  require_real_models: true
+  require_materialized_benchmark: true
+  forbid_existing_output_overwrite: true
